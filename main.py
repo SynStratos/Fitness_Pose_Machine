@@ -22,7 +22,6 @@ if __name__ == "__main__":
         _, processed_frame = process_image(new_frame) # lo gestiamo separatamente all'arrivo di ogni frame senza il resto dello script? controllare i tempi di esecuzione
         frames.append(processed_frame)
 
-
         if len(frames) >= 3:
             tic = time.clock()
             preprocessed_x = preprocess_angles(frames[-3:])
