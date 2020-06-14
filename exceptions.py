@@ -7,3 +7,7 @@ class NoneRepetitionException(Exception):
     def __init__(self, *args):
         super(NoneRepetitionException, self).__init__(*args)
 
+
+class CompleteExerciseException(Exception):
+    def __init__(self, *args):
+        super(CompleteExerciseException, self).__init__(*args)
