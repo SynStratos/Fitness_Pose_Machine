@@ -54,15 +54,21 @@ class Exercise:
         self.num_bad_reps = 0
         self.time_out_series = 0
 
-    def __check_pull_frame__(self, angle, index, time, _min, _max, mid_point, tolerance=5):
+    def __reset__(self):
+        self.states = [0] * self.n_angles
+        self.outputs = [0] * self.n_angles
+        self.timestamps = [0] * self.n_angles
+        pass
+
+    def __check_pull_frame__(self, angle, index, _min, _max, mid_point, tolerance=5):
         angle = abs(180 - angle)
         _min = abs(180 - _min)
         _max = abs(180 - _max)
         mid_point = abs(180 - mid_point)
 
-        self.__check_push_frame__(angle, index, time, _min, _max, mid_point, tolerance)
+        self.__check_push_frame__(angle, index, _min, _max, mid_point, tolerance)
 
-    def __check_push_frame__(self, angle, index, time, _min, _max, mid_point, tolerance=5):
+    def __check_push_frame__(self, angle, index, _min, _max, mid_point, tolerance=5):
         """
 
         """
@@ -87,12 +93,12 @@ class Exercise:
                 self.states[index] = 3
             # goes back to 'min' without completing the repetition
             elif angle <= _min:
-                self.timestamps[index] = time
+                self.timestamps[index] = self.time
                 self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 0
             # goes directly over the top value, maybe skipped frames
             elif angle > (_max + tolerance):
-                self.timestamps[index] = time
+                self.timestamps[index] = self.time
                 self.outputs[index] = 2
                 self.states[index] = 4
 
@@ -129,29 +135,29 @@ class Exercise:
                 for oo in self.angles_order[i + 1:]:
                     for angle_y in oo:
                         if (self.timestamps[angle_x] >= self.timestamps[angle_y]) and (self.timestamps[angle_x] > 0) and (self.timestamps[angle_y] > 0):
-                            print("Wrong order: you moved your {} before your {}.".format(self.angles[angle_x], self.angles[angle_y]))
-                            return False
+                            s = "Wrong order: you moved your {} before your {}.".format(self.angles[angle_x], self.angles[angle_y])
+                            return False, s
 
-        return True
+        return True, ""
 
     def __check_repetition__(self):
         if len(set(self.outputs)) == 1 and self.outputs[0] == 1:
             return self.__check_order__()
         else:
             if len(set(self.outputs)) == 1 and self.outputs[0] == 2:
-                print("All movements where wrong!")
+                s = "All movements where wrong!"
             else:
                 for i, o in enumerate(self.outputs):
-                    print("Movement for {} was {}!".format(self.angles[i], OUTPUTS[o]))
-            return False
+                    s = "Movement for {} was {}!".format(self.angles[i], OUTPUTS[o])
+            return False, s
 
-    def process_frame(self, ):
+    def process_frame(self, frame):
         repetition_ended = False
         for i in range(len(self.angles)):
             if self.push_pull[i] == "push":
-                self.__check_push_frame__()
+                self.__check_push_frame__(frame, index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
             elif self.push_pull[i] == "pull":
-                self.__check_pull_frame__()
+                self.__check_pull_frame__(frame, index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
 
             if self.outputs[i] in [1, 2] and self.states[0] == 1:
                 repetition_ended = True
@@ -181,20 +187,25 @@ class Exercise:
                 self.n_timeout = int(self.n_timeout / self.rep_timeout)
 
             if len(set(self.outputs)) == 1 and self.outputs[0] == 0:
-                #timed_out_rep += 1
+                self.__reset__()
                 log.debug("Timeout reached: no repetition completed.")
                 raise NoneRepetitionException
             else:
-                if self.__check_repetition__():
+                good, message = self.__check_repetition__()
+                if good:
                     log.debug("All movements where correct!")
                     log.info("Good repetition!")
+                    self.__reset__()
                     self.num_good_reps += 1
+
+                    if self.num_good_reps == self.n_repetition:
+                        log.info("Completed exercise.")
+                        raise CompleteExerciseException
+
                 else:
                     log.info("Bad repetition!")
                     self.num_bad_reps += 1
-                    raise BadRepetitionException
+                    self.__reset__()
+                    raise BadRepetitionException(message)
 
-            if self.num_good_reps == self.n_repetition:
-                log.info("Completed exercise.")
-                raise CompleteExerciseException
-            
+
