@@ -1,6 +1,22 @@
 import json
 from exceptions import *
 
+from logger import log
+from utils.angles import preprocess_angles
+
+STATES = [
+         'none',
+         'start',
+         'rep_going',
+         'top',
+         'over_top'
+]
+
+OUTPUTS = [
+          'no_rep',
+          'rep_ok',
+          'rep_bad'
+          ]
 
 class Exercise:
     """
@@ -27,7 +43,7 @@ class Exercise:
         self.outputs = [0]*self.n_angles
         self.timestamps = [0]*self.n_angles
 
-    def __check_pull_frame(self, angle, index, time, _min, _max, mid_point, tolerance=5):
+    def __check_pull_frame__(self, angle, index, time, _min, _max, mid_point, tolerance=5):
         angle = abs(180 - angle)
         _min = abs(180 - _min)
         _max = abs(180 - _max)
@@ -87,3 +103,33 @@ class Exercise:
             # goes back to min
             if angle <= _min:
                 self.states[index] = 0
+
+    def __check_order__(self):
+        """
+        return: True se ordine corretto, False se ordine errato
+        """
+        if not self.angles_order:
+            return True
+        elif len(self.angles_order) < 2:
+            raise Exception("cant check order of a single element")
+
+        for i, o in enumerate(self.angles_order):
+            for angle_x in o:
+                for oo in self.angles_order[i + 1:]:
+                    for angle_y in oo:
+                        if (self.timestamps[angle_x] >= self.timestamps[angle_y]) and (self.timestamps[angle_x] > 0) and (self.timestamps[angle_y] > 0):
+                            print("Wrong order: you moved your {} before your {}.".format(self.angles[angle_x], self.angles[angle_y]))
+                            return False
+
+        return True
+
+    def __check_repetition__(self):
+        if len(set(self.outputs)) == 1 and self.outputs[0] == 1:
+            return self.__check_order__()
+        else:
+            if len(set(self.outputs)) == 1 and self.outputs[0] == 2:
+                print("All movements where wrong!")
+            else:
+                for i, o in enumerate(self.outputs):
+                    print("Movement for {} was {}!".format(self.angles[i], OUTPUTS[o]))
+            return False
