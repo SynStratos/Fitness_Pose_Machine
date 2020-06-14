@@ -18,11 +18,12 @@ OUTPUTS = [
           'rep_bad'
           ]
 
+
 class Exercise:
     """
 
     """
-    def __init__(self, config, side):
+    def __init__(self, config, side, fps):
         if side not in ['s_e', 's_w']: raise Exception("Unexpected 'side' value.")
         config = json.load(config)
         self.name = config["exercise_name"]
@@ -39,9 +40,19 @@ class Exercise:
 
         self.n_angles = len(self.angles_index)
 
+        self.fps = fps
+
+        self.time = 0
         self.states = [0]*self.n_angles
         self.outputs = [0]*self.n_angles
         self.timestamps = [0]*self.n_angles
+        self.n_timeout = int(self.tot_timeout / self.rep_timeout)
+        self.countdown = int(fps * self.rep_timeout)
+        self.timed_out = False
+
+        self.num_good_reps = 0
+        self.num_bad_reps = 0
+        self.time_out_series = 0
 
     def __check_pull_frame__(self, angle, index, time, _min, _max, mid_point, tolerance=5):
         angle = abs(180 - angle)
@@ -133,3 +144,57 @@ class Exercise:
                 for i, o in enumerate(self.outputs):
                     print("Movement for {} was {}!".format(self.angles[i], OUTPUTS[o]))
             return False
+
+    def process_frame(self, ):
+        repetition_ended = False
+        for i in range(len(self.angles)):
+            if self.push_pull[i] == "push":
+                self.__check_push_frame__()
+            elif self.push_pull[i] == "pull":
+                self.__check_pull_frame__()
+
+            if self.outputs[i] in [1, 2] and self.states[0] == 1:
+                repetition_ended = True
+        self.time += 1
+
+        if self.countdown == 0:
+            self.time_out_series += 1
+            log.debug("Countdown over.")
+
+        repetition_ended = repetition_ended or (self.countdown == 0)
+
+        self.countdown -= 1
+
+        if repetition_ended:
+            if self.timed_out and (self.countdown < 0):
+                self.n_timeout -= 1
+                if self.n_timeout == 0:
+                    log.debug("Maximum number of timeouts reached.")
+                    raise TimeoutError
+            elif not self.timed_out and (self.countdown < 0):
+                log.debug("First timeout reached.")
+                self.timed_out = True
+                self.n_timeout = int(self.n_timeout / self.rep_timeout)
+            else:
+                log.debug("No timeout reached.")
+                self.timed_out = False
+                self.n_timeout = int(self.n_timeout / self.rep_timeout)
+
+            if len(set(self.outputs)) == 1 and self.outputs[0] == 0:
+                #timed_out_rep += 1
+                log.debug("Timeout reached: no repetition completed.")
+                raise NoneRepetitionException
+            else:
+                if self.__check_repetition__():
+                    log.debug("All movements where correct!")
+                    log.info("Good repetition!")
+                    self.num_good_reps += 1
+                else:
+                    log.info("Bad repetition!")
+                    self.num_bad_reps += 1
+                    raise BadRepetitionException
+
+            if self.num_good_reps == self.n_repetition:
+                log.info("Completed exercise.")
+                raise CompleteExerciseException
+            
