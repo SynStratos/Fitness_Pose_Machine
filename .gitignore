@@ -1,3 +1,13 @@
+#Models
+*.h5
+*.pt
+
+#Pycharm
+.idea
+
+#macos
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
