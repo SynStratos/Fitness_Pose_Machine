@@ -7,10 +7,11 @@
   },
   "push_pull": ["push", "push", "pull", "pull"],
   "mins": [0,0,0,0],
-  "maxs": [0,0,0,0],
+  "maxs": [168, 169, 73, 62],
   "mids": [0,0,0,0],
   "angles_order": [[2,3], [0,1]],
   "repetition_timeout": 4,
   "total_timeout": 20,
-  "n_repetition": 10
+  "n_repetition": 10,
+  "tolerance": 12
 }

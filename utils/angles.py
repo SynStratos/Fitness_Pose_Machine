@@ -16,7 +16,7 @@ def remove_missing(series_in, inplace=False):
         if i > 1:
             # manage missing value (by default missing angles were set to zero)
             if angle == 0 or angle is None:
-                series[i] = abs(2 * series[i - 1] - series[i - 2])
+                series[i] = min([180, abs(2 * series[i - 1] - series[i - 2])])
 
     if not inplace:
         return series
