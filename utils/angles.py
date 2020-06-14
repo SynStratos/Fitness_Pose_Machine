@@ -32,7 +32,7 @@ def remove_outliers(series_in, _mid=None, _median=None, inplace=False):
     else:
         series = series_in
 
-    mid = stats.mean(series)
+    mid = _mid #stats.mean(series)
 
     for i, angle in enumerate(series[:-1]):
         # skip first element
@@ -51,7 +51,7 @@ def remove_outliers(series_in, _mid=None, _median=None, inplace=False):
         return series
 
 
-def preprocess_angles(series_in, inplace=False):
+def preprocess_angles(series_in, mids, inplace=False):
   if type(series_in) != np.ndarray:
     raise Exception("'series' must be of type numpy.ndarray'.")
   if not inplace:
@@ -60,8 +60,8 @@ def preprocess_angles(series_in, inplace=False):
     series = series_in
 
   for i in range(series.shape[1]):
-    series[:,i] = remove_missing(series[:,i], inplace)
-    series[:,i] = remove_outliers(series[:,i], inplace)
+    series[:,i] = remove_missing(series[:,i], mids[i], inplace)
+    series[:,i] = remove_outliers(series[:,i], mids[i], inplace)
 
   if not inplace:
     return series

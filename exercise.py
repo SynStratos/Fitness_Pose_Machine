@@ -23,6 +23,7 @@ class Exercise:
     """
 
     """
+    mids = None
     def __init__(self, config, side, fps):
         if side not in ['s_e', 's_w']: raise Exception("Unexpected 'side' value.")
         config = json.load(config)
@@ -91,7 +92,7 @@ class Exercise:
         # state 'rep_going'
         elif self.states[index] == 2:
             # goes to 'top'
-            if (_max - self.tolerance) <= angle <= (_max + self.tolerance):
+            if (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
                 self.states[index] = 3
             # goes back to 'min' without completing the repetition
             elif angle <= _min:
@@ -99,7 +100,7 @@ class Exercise:
                 self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 0
             # goes directly over the top value, maybe skipped frames
-            elif angle > (_max + self.tolerance):
+            elif angle > (_max + self.tolerance[index]):
                 self.timestamps[index] = self.time
                 self.outputs[index] = 2
                 self.states[index] = 4
@@ -112,7 +113,7 @@ class Exercise:
                 self.outputs[index] = 1  # repetition correctly completed
                 self.states[index] = 0
             # goes over the top value
-            elif angle > (_max + self.tolerance):
+            elif angle > (_max + self.tolerance[index]):
                 self.timestamps[index] = self.time
                 self.outputs[index] = 2  # bad repetition
                 self.states[index] = 4
@@ -209,5 +210,3 @@ class Exercise:
                     self.num_bad_reps += 1
                     self.__reset__()
                     raise BadRepetitionException(message)
-
-

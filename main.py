@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         if len(frames) >= 3:
             tic = time.clock()
-            preprocessed_x = preprocess_angles(frames[-3:])
+            preprocessed_x = preprocess_angles(frames[-3:], mids=Exercise.mids)
 
             try:
                 if exercise.process_frame(preprocessed_x[-2]):
