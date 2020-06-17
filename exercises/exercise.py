@@ -68,7 +68,7 @@ class Exercise:
         log.debug("index_to_keep " + str(self.index_to_keep))
         for i in self.index_to_keep:
             self.states[i] = 1
-        self.index_to_keep = [0] * self.n_angles
+        self.index_to_keep = []
         self.outputs = [0] * self.n_angles
         self.timestamps = [0] * self.n_angles
         self.number_of_spikes = self.config["number_of_spikes"]
