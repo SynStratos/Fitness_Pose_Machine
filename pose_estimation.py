@@ -69,7 +69,13 @@ def _get_angles(joints):
         "hip_dx": (2, 9, 10),
         "knee_sx": (11, 12, 13),
         "knee_dx": (8, 9, 10),
-        "neck_front": ([11, 8], 1, 0)
+        "neck_front": ([11, 8], 1, 0),
+        "foot_shoulder_sx": (13, 11, 5),
+        "foot_shoulder_dx": (10, 8, 2),
+        "hand_hip_knee_sx": (12, 11, 7),
+        "hand_hip_knee_dx": (9, 8, 4),
+        "hand_hip_foot_sx": (13, 11, 7),
+        "hand_hip_foot_dx": (10, 8, 4)
         # TODO: add angle between hand-hip-foot -> useful for lateral sight e.g. burpees
     }
 

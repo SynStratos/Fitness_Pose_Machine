@@ -27,6 +27,7 @@ class Exercise:
         if side not in ['s_e', 's_w']: raise Exception("Unexpected 'side' value.")
         with open(config) as f:
             config = json.load(f)
+        self.config = config
         self.name = config["exercise_name"]
         self.angles = config["angles_names"]
         self.angles_index = config["angles_to_check"][side]
@@ -40,6 +41,8 @@ class Exercise:
         self.n_repetition = config["n_repetition"]
 
         self.tolerance = config["tolerance"]
+
+        self.number_of_spikes = config["number_of_spikes"]
 
         self.n_angles = len(self.angles_index)
 
@@ -61,7 +64,7 @@ class Exercise:
         self.states = [0] * self.n_angles
         self.outputs = [0] * self.n_angles
         self.timestamps = [0] * self.n_angles
-        pass
+        self.number_of_spikes = self.config["number_of_spikes"]
 
     def __check_pull_frame__(self, angle, index, _min, _max, mid_point):
         angle = abs(180 - angle)
@@ -97,12 +100,18 @@ class Exercise:
             # goes back to 'min' without completing the repetition
             elif angle <= _min:
                 self.timestamps[index] = self.time
-                self.outputs[index] = 2  # set to bad repetition
+
+                self.number_of_spikes[index] -= 1
+                if self.number_of_spikes[index] <= 0:
+                    self.outputs[index] = 2  # set to bad repetition
+
                 self.states[index] = 0
             # goes directly over the top value, maybe skipped frames
             elif angle > (_max + self.tolerance[index]):
                 self.timestamps[index] = self.time
-                self.outputs[index] = 2
+                self.number_of_spikes[index] -= 1
+                if self.number_of_spikes[index] <= 0:
+                    self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 4
 
         # state 'top'
@@ -110,12 +119,16 @@ class Exercise:
             # goes back to 'min'
             if angle <= _min:
                 self.timestamps[index] = self.time
-                self.outputs[index] = 1  # repetition correctly completed
+                self.number_of_spikes[index] -= 1
+                if self.number_of_spikes[index] <= 0:
+                    self.outputs[index] = 1  # repetition correctly completed
                 self.states[index] = 0
             # goes over the top value
             elif angle > (_max + self.tolerance[index]):
                 self.timestamps[index] = self.time
-                self.outputs[index] = 2  # bad repetition
+                self.number_of_spikes[index] -= 1
+                if self.number_of_spikes[index] <= 0:
+                    self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 4
 
         # state 'over_top'
@@ -156,8 +169,6 @@ class Exercise:
 
     def process_frame(self, frame, **kwargs):
         repetition_ended = False
-        # frame = frame[:, self.angles_index]
-        # frame = preprocess_angles(frame, self.mids)
         for i in range(len(self.angles)):
             if self.push_pull[i] == "push":
                 self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
