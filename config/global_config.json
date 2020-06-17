@@ -1,4 +1,4 @@
 {
   "model": "keras_model.h5",
-  "fps": 15
+  "fps": 10
 }

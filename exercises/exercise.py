@@ -70,6 +70,8 @@ class Exercise:
         self.outputs = [0] * self.n_angles
         self.timestamps = [0] * self.n_angles
         self.number_of_spikes = self.config["number_of_spikes"]
+        # self.n_timeout = int(self.tot_timeout / self.rep_timeout)
+        self.countdown = int(self.fps * self.rep_timeout)
 
     def __check_pull_frame__(self, angle, index, _min, _max, mid_point):
         angle = abs(180 - angle)
