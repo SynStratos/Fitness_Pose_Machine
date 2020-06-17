@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # TODO: get side
     with open(global_config) as f:
         global_config = json.load(f)
-    exercise = Exercise(config=ex_config, side='s_w', fps=global_config['fps'])
+    exercise = Exercise(config=ex_config, side='s_e', fps=global_config['fps'])
 
     print(exercise.mids)
 

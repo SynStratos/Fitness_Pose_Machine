@@ -11,3 +11,8 @@ class NoneRepetitionException(Exception):
 class CompleteExerciseException(Exception):
     def __init__(self, *args):
         super(CompleteExerciseException, self).__init__(*args)
+
+
+class GoodRepetitionException(Exception):
+    def __init__(self, *args):
+        super(GoodRepetitionException, self).__init__(*args)

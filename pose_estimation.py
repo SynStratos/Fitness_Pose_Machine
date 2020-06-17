@@ -272,7 +272,7 @@ def process_image(image, model=model, features_method=_get_angles, show_joints=F
                         subset[j][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
                 elif found == 2:  # if found 2 and disjoint, merge them
                     j1, j2 = subset_idx
-                    print("found = 2")
+                    log.debug("found = 2")
                     membership = ((subset[j1] >= 0).astype(int) + (subset[j2] >= 0).astype(int))[:-2]
                     if len(np.nonzero(membership == 2)[0]) == 0:  # merge
                         subset[j1][:-2] += (subset[j2][:-2] + 1)

@@ -60,8 +60,13 @@ class Exercise:
         self.num_bad_reps = 0
         self.time_out_series = 0
 
+        self.index_to_keep = []
+
     def __reset__(self):
         self.states = [0] * self.n_angles
+        for i in self.index_to_keep:
+            self.states[i] = 1
+        self.index_to_keep = [0] * self.n_angles
         self.outputs = [0] * self.n_angles
         self.timestamps = [0] * self.n_angles
         self.number_of_spikes = self.config["number_of_spikes"]
@@ -164,7 +169,7 @@ class Exercise:
                 s = "All movements where wrong!"
             else:
                 for i, o in enumerate(self.outputs):
-                    s = "Movement for {} was {}!".format(self.angles[i], OUTPUTS[o])
+                    s = "Movement for {} was {}!".format(self.angles[i], OUTPUTS[o]) #TODO: FIX THIS IN ONLY ONE MESSAGE
             return False, s
 
     def process_frame(self, frame, **kwargs):
@@ -175,8 +180,11 @@ class Exercise:
             elif self.push_pull[i] == "pull":
                 self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
 
-            if self.outputs[i] in [1, 2] and self.states[0] == 1:
+            repetition_ended = False
+
+            if self.outputs[i] in [1, 2] and self.states[i] == 1:
                 repetition_ended = True
+                self.index_to_keep.append(i)
         self.time += 1
 
         if self.countdown == 0:
@@ -218,6 +226,7 @@ class Exercise:
                         log.info("Completed exercise.")
                         raise CompleteExerciseException
 
+                    raise GoodRepetitionException
                 else:
                     log.info("Bad repetition!")
                     self.num_bad_reps += 1
