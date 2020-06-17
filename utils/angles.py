@@ -2,6 +2,7 @@ import numpy as np
 from copy import copy
 from scipy.signal import medfilt
 import statistics as stats
+import math
 
 
 def remove_missing(series_in, inplace=False):
@@ -65,3 +66,20 @@ def preprocess_angles(series_in, mids, inplace=False):
 
   if not inplace:
     return series
+
+
+def create_angle(p1, p2, p3):
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
+
+    p12 = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    p13 = np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
+    p23 = np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
+
+    a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
+
+    a_deg = math.degrees(a)  # *180/math.pi
+
+    # round to 2 decimal (more? less?)
+    return round(a_deg, 2)

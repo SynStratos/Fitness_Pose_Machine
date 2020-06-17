@@ -120,7 +120,7 @@ class Exercise:
             if angle <= _min:
                 self.timestamps[index] = self.time
                 self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] <= 0:
+                if self.number_of_spikes[index] == 0:
                     self.outputs[index] = 1  # repetition correctly completed
                 self.states[index] = 0
             # goes over the top value

@@ -12,6 +12,7 @@ from scipy.ndimage import gaussian_filter
 from logger import log
 from models.tf2.keras_pose_estimation import get_model
 from utils.pose import pad_right_down_corner
+from utils.angles import create_angle
 
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[2, 3], [2, 6], [3, 4], [4, 5], [6, 7], [7, 8], [2, 9], [9, 10], [10, 11], [2, 12], [12, 13], [13, 14],
@@ -82,20 +83,23 @@ def _get_angles(joints):
     ang = []
     for k, v in angles.items():
         try:
-            x1, y1 = _mid_joint(v[0], joints)
-            x2, y2 = _mid_joint(v[1], joints)
-            x3, y3 = _mid_joint(v[2], joints)
 
-            p12 = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-            p13 = np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
-            p23 = np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
+            v1 = _mid_joint(v[0], joints)
+            v2 = _mid_joint(v[1], joints)
+            v3 = _mid_joint(v[2], joints)
 
-            a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
+            a_deg = create_angle(v1, v2, v3)
 
-            a_deg = math.degrees(a)  # *180/math.pi
-
-            # round to 2 decimal (more? less?)
-            a_deg = round(a_deg, 2)
+            # p12 = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+            # p13 = np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
+            # p23 = np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
+            #
+            # a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
+            #
+            # a_deg = math.degrees(a)  # *180/math.pi
+            #
+            # # round to 2 decimal (more? less?)
+            # a_deg = round(a_deg, 2)
         except Exception as e:
             log.debug("Exception for angle {}: {}".format(k, str(e)))
             a_deg = 0  #TODO: set to None (?)
