@@ -46,10 +46,10 @@ file = None
 @socketio.on('connect')
 def connected():
     global exercise
-    global file # debugging
+    global file  # debugging
     print(colored('> Client conencted', 'red'))
 
-    file = open("debugging/debuggin_"+datetime.now().strftime("%H:%M:%S"));
+    file = open("debugging/debuggin_" + datetime.now().strftime("%H:%M:%S") + ".txt", "w+")
 
     # istanzio tutto ciò che serve una volta sola
     set_logger()
@@ -65,7 +65,11 @@ def connected():
 
 @socketio.on('disconnect')
 def disconnect():
+    global file
+
     print(colored('> Client disconnected', 'red'))
+
+    file.close()
 
 
 # evento chiamato quando si fa l'upload di una immagine via client
@@ -86,6 +90,7 @@ def ingestImage(imageDataUrl):
     global frames
     global exercise
     global number_frames
+    global file
 
     # aggiorno il client
     print(colored(len(frames), 'red'))
@@ -103,6 +108,9 @@ def ingestImage(imageDataUrl):
     if len(frames) >= 3:
         # tic = time.clock()
         preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
+        # debuggin
+        for element in preprocessed_x[1]:
+            file.write(str(element) + ",")
         print(colored(preprocessed_x, 'green'))
 
         try:
@@ -139,5 +147,3 @@ def disconnect():
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
-
-
