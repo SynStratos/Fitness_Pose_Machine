@@ -38,7 +38,7 @@ def remove_outliers(series_in, _mid=None, _median=None, inplace=False):
         # skip first element
         if i > 0:
             threshold = (series[i - 1] + series[i + 1]) / 2
-            if (angle > mid and angle < threshold) or (angle < mid and angle > threshold):
+            if (mid < angle < threshold) or (mid > angle > threshold):
                 series[i] = threshold
 
     #TODO: how to do it without the full series
@@ -60,7 +60,7 @@ def preprocess_angles(series_in, mids, inplace=False):
     series = series_in
 
   for i in range(series.shape[1]):
-    series[:,i] = remove_missing(series[:,i], mids[i], inplace)
+    series[:,i] = remove_missing(series[:,i], inplace)
     series[:,i] = remove_outliers(series[:,i], mids[i], inplace)
 
   if not inplace:

@@ -9,6 +9,7 @@ import numpy as np
 import math
 from scipy.ndimage import gaussian_filter
 
+from logger import log
 from models.tf2.keras_pose_estimation import get_model
 from utils.pose import pad_right_down_corner
 
@@ -25,13 +26,16 @@ colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0]
           [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
           [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
-g_config = json.loads('./config/global_config.json')
+with open('./config/global_config.json') as f:
+    g_config = json.load(f)
 
-model_weights = os.path.join('./models', g_config['model'])
+model_weights = os.path.join('./weights', g_config['model'])
 
 model = get_model(model_weights)
 
-pose_config = json.loads('./config/pose_estimation_config.json')
+with open('./config/pose_estimation_config.json') as f:
+    pose_config = json.load(f)
+
 boxsize = pose_config['boxsize']
 scale_search = pose_config['scale_search']
 stride, padValue = pose_config['stride'], pose_config['padValue']
@@ -87,7 +91,7 @@ def _get_angles(joints):
             # round to 2 decimal (more? less?)
             a_deg = round(a_deg, 2)
         except Exception as e:
-            print("Exception for angle {}: {}".format(k, str(e)))
+            log.debug("Exception for angle {}: {}".format(k, str(e)))
             a_deg = 0  #TODO: set to None (?)
         finally:
             ang.append(a_deg)
@@ -301,7 +305,7 @@ def process_image(image, model=model, features_method=_get_angles, show_joints=F
     # TODO: define method to extract the single person if multiple
     person = persons[0]
     ####
-    joints = None
+    # joints = None
     if show_joints:
         visualize_person(image, person)
 

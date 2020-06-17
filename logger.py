@@ -28,7 +28,7 @@ def set_logger(level='debug'):
     console_handler.setFormatter(logging.Formatter(_format))
     log.addHandler(console_handler)
 
-    filename = os.path.join(output_dir, "/{}_{}.log".format(strftime("%Y%m%d_%H%M%S", gmtime()), level.upper()))
+    filename = os.path.join(output_dir, "{}_{}.log".format(strftime("%Y%m%d_%H%M%S", gmtime()), level.upper()))
     file_handler = logging.FileHandler(filename)
     file_handler.setLevel(_LOG_LVLS[level.upper()])
     file_handler.setFormatter(logging.Formatter(_format))

@@ -13,5 +13,6 @@
   "repetition_timeout": 4,
   "total_timeout": 20,
   "n_repetition": 10,
-  "tolerance": [12, 12, 20, 16]
+  "tolerance": [12, 12, 20, 16],
+  "number_of_spikes": [1, 1, 1, 1]
 }

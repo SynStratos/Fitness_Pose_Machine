@@ -2,7 +2,6 @@ import json
 from exceptions import *
 
 from logger import log
-from utils.angles import preprocess_angles
 
 STATES = [
          'none',
@@ -26,7 +25,8 @@ class Exercise:
     mids = None
     def __init__(self, config, side, fps):
         if side not in ['s_e', 's_w']: raise Exception("Unexpected 'side' value.")
-        config = json.load(config)
+        with open(config) as f:
+            config = json.load(f)
         self.name = config["exercise_name"]
         self.angles = config["angles_names"]
         self.angles_index = config["angles_to_check"][side]
@@ -154,13 +154,15 @@ class Exercise:
                     s = "Movement for {} was {}!".format(self.angles[i], OUTPUTS[o])
             return False, s
 
-    def process_frame(self, frame):
+    def process_frame(self, frame, **kwargs):
         repetition_ended = False
+        # frame = frame[:, self.angles_index]
+        # frame = preprocess_angles(frame, self.mids)
         for i in range(len(self.angles)):
             if self.push_pull[i] == "push":
-                self.__check_push_frame__(frame, index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
+                self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
             elif self.push_pull[i] == "pull":
-                self.__check_pull_frame__(frame, index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
+                self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
 
             if self.outputs[i] in [1, 2] and self.states[0] == 1:
                 repetition_ended = True
