@@ -46,10 +46,7 @@ file = None
 @socketio.on('connect')
 def connected():
     global exercise
-    global file  # debugging
     print(colored('> Client conencted', 'red'))
-
-    file = open("debugging/debuggin_" + datetime.now().strftime("%H:%M:%S") + ".txt", "w+")
 
     # istanzio tutto ciò che serve una volta sola
     set_logger()
@@ -65,11 +62,7 @@ def connected():
 
 @socketio.on('disconnect')
 def disconnect():
-    global file
-
     print(colored('> Client disconnected', 'red'))
-
-    file.close()
 
 
 # evento chiamato quando si fa l'upload di una immagine via client
@@ -109,8 +102,14 @@ def ingestImage(imageDataUrl):
         # tic = time.clock()
         preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
         # debuggin
+
         for element in preprocessed_x[1]:
+            file = open("debugging/debugging.csv", "a+")
             file.write(str(element) + ",")
+            file.close()
+        file = open("debugging/debugging.csv", "a+")
+        file.write("\n")
+        file.close()
         print(colored(preprocessed_x, 'green'))
 
         try:
