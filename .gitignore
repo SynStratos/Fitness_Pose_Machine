@@ -1,5 +1,6 @@
 #Log files
 *.log
+debugging
 
 #Models
 *.h5
