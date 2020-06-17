@@ -64,6 +64,8 @@ class Exercise:
 
     def __reset__(self):
         self.states = [0] * self.n_angles
+        log.debug("states before " + str(self.states))
+        log.debug("index_to_keep " + str(self.index_to_keep))
         for i in self.index_to_keep:
             self.states[i] = 1
         self.index_to_keep = [0] * self.n_angles
@@ -72,6 +74,8 @@ class Exercise:
         self.number_of_spikes = self.config["number_of_spikes"]
         # self.n_timeout = int(self.tot_timeout / self.rep_timeout)
         self.countdown = int(self.fps * self.rep_timeout)
+
+        log.debug("states then " + str(self.states))
 
     def __check_pull_frame__(self, angle, index, _min, _max, mid_point):
         angle = abs(180 - angle)
@@ -170,8 +174,9 @@ class Exercise:
             if len(set(self.outputs)) == 1 and self.outputs[0] == 2:
                 s = "All movements where wrong!"
             else:
+                s = ""
                 for i, o in enumerate(self.outputs):
-                    s = "Movement for {} was {}!".format(self.angles[i], OUTPUTS[o]) #TODO: FIX THIS IN ONLY ONE MESSAGE
+                    s += "Movement for {} was {}! \n".format(self.angles[i], OUTPUTS[o]) #TODO: FIX THIS IN ONLY ONE MESSAGE
             return False, s
 
     def process_frame(self, frame, **kwargs):
