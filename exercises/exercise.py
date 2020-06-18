@@ -1,5 +1,6 @@
 import json
 from exceptions import *
+from copy import copy
 
 from logger import log
 
@@ -28,6 +29,7 @@ class Exercise:
         with open(config) as f:
             config = json.load(f)
 
+        self.config = config
         self.name = config["exercise_name"]
         self.angles = config["angles_names"]
         self.angles_index = config["angles_to_check"][side]
@@ -42,8 +44,7 @@ class Exercise:
 
         self.tolerance = config["tolerance"]
 
-        self.number_of_spikes = config["number_of_spikes"]
-        self.backup_number_of_spikes = config["number_of_spikes"]
+        self.number_of_spikes = copy(config["number_of_spikes"])
         self.n_angles = len(self.angles_index)
 
         self.fps = fps
@@ -72,7 +73,7 @@ class Exercise:
         self.outputs = [0] * self.n_angles
         self.timestamps = [0] * self.n_angles
 
-        self.number_of_spikes = [a for a in self.backup_number_of_spikes]
+        self.number_of_spikes = copy(self.config["number_of_spikes"])
 
         log.debug("number_of_spikes: " + str(self.number_of_spikes))
         # self.n_timeout = int(self.tot_timeout / self.rep_timeout)

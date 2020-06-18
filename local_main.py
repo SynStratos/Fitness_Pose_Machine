@@ -140,4 +140,4 @@ if __name__ == '__main__':
 
     exercise = Exercise(config=ex_config, side='s_e', fps=global_config['fps'])
 
-    ingest_video_local(exercise, video_file, number_of_frames=80, fps=global_config['fps'], h=240)
+    ingest_video_local(exercise, video_file, number_of_frames=80, fps=global_config['fps'], h=180)
