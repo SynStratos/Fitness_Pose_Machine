@@ -1,6 +1,8 @@
 from exercises.exercise import Exercise
 from utils.angles import create_angle
 
+ex_config = "./config/burpee_config.json"
+
 
 def _check_hands_(hand_sx, hand_dx):
     sx_x, sx_y = hand_sx
@@ -19,11 +21,17 @@ def _check_on_the_ground_(foot, shoulder, range):
 
     angle_ground = create_angle(foot, shoulder, (foot_x, shoulder_y))
 
-    #TODO controlla angolo con range di reference
+    # TODO controlla angolo con range di reference
     if range[0] <= angle_ground <= range[-1]:
         return True
     else:
         return False
+
+
+def _check_at_180_(angle, **kwargs):
+    # TODO: set more precise values
+    if 180 <= angle <= 165:
+        joints = kwargs['joints']
 
 
 
