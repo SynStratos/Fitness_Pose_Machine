@@ -236,9 +236,9 @@ class Exercise:
         repetition_ended = False
         for i in range(len(self.angles)):
             if self.push_pull[i] == "push":
-                self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
+                self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
             elif self.push_pull[i] == "pull":
-                self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i])
+                self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
 
             repetition_ended = False
 

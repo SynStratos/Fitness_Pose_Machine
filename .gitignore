@@ -1,7 +1,7 @@
 #Log files
 *.log
 debugging
-backupgit
+backup
 
 #videos
 *.mp4

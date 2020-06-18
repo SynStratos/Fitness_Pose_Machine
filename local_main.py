@@ -17,6 +17,7 @@ from exercises.thruster import Thruster
 # vars globali
 exercise = None
 frames = []
+joints_total = []
 number_frames = 1
 file = None
 
@@ -31,6 +32,7 @@ def ingest_image_local(image):
     global exercise
     global number_frames
     global file
+    global joints_total
 
     # aggiorno il client
     print(colored(len(frames), 'red'))
@@ -40,7 +42,8 @@ def ingest_image_local(image):
     new_frame = image
 
     # lo gestiamo separatamente all'arrivo di ogni frame senza il resto dello script? controllare i tempi di esecuzione
-    _, processed_frame = process_image(new_frame)
+    joints_person, processed_frame = process_image(new_frame)
+    joints_total.append(joints_person)
     frames.append(processed_frame)
 
     if len(frames) >= 3:
@@ -57,8 +60,10 @@ def ingest_image_local(image):
         file.close()
         print(colored(preprocessed_x[1], 'green'))
 
+        joints = joints_total[-2]
+
         try:
-            exercise.process_frame(preprocessed_x[-2])
+            exercise.process_frame(preprocessed_x[-2], joints=joints)
         except GoodRepetitionException:
             print(colored("Reps OK", 'green'))
             # send message to client per ripetizione corretta
@@ -73,6 +78,7 @@ def ingest_image_local(image):
             print(colored("Timeout", 'red'))
         finally:
             frames = copy(frames[-2:])
+            joints_total = copy(joints_total[-2:])
 
 
 def ingest_video_local(exercise, path, number_of_frames, fps, w=None, h=None, rotation=0, show_joints=False):

@@ -40,6 +40,7 @@ socketio = SocketIO(app, always_connect=True, engineio_logger=True, cors_allowed
 # vars globali
 exercise = None
 frames = []
+joints_total = []
 number_frames = 1
 file = None
 file_name = None
@@ -78,6 +79,7 @@ def ingestImage(imageDataUrl):
     global exercise
     global number_frames
     global file
+    global joints_total
 
     # aggiorno il client
     print(colored(len(frames), 'red'))
@@ -89,7 +91,8 @@ def ingestImage(imageDataUrl):
     new_frame = cv2.cvtColor(numpy.array(Image.open(BytesIO(imageDataUrl))), cv2.COLOR_RGB2BGR)
 
     # lo gestiamo separatamente all'arrivo di ogni frame senza il resto dello script? controllare i tempi di esecuzione
-    _, processed_frame = process_image(new_frame)
+    joints_person, processed_frame = process_image(new_frame)
+    joints_total.append(joints_person)
     frames.append(processed_frame)
 
     if len(frames) >= 3:
@@ -106,8 +109,9 @@ def ingestImage(imageDataUrl):
         file.close()
         print(colored(preprocessed_x, 'green'))
 
+        joints = joints_total[-2]
         try:
-            exercise.process_frame(preprocessed_x[-2])
+            exercise.process_frame(preprocessed_x[-2], joints=joints)
         except GoodRepetitionException:
             print(colored("Reps OK", 'green'))
             # send message to client per ripetizione corretta
@@ -132,6 +136,7 @@ def ingestImage(imageDataUrl):
 
         finally:
             frames = copy(frames[-2:])
+            joints_total = copy(joints_total[-2:])
 
 
 @socketio.on('video-ended')
