@@ -14,27 +14,35 @@ mins = ex_config['mins']
 maxs = ex_config['maxs']
 mids = ex_config['mids']
 tolerances = ex_config['tolerance']
+angles_names = ex_config['angles_names']
 
 data = pd.read_csv("debugging/debugging.csv")
 data = data.iloc[:, :-1].values
 
+# grafico comune
+
+plt.plot(data[:, 0], label=angles_names[0], color='skyblue')
+plt.plot(data[:, 1], label=angles_names[1], color='orange')
+plt.plot(data[:, 2], label=angles_names[2], color='green')
+plt.plot(data[:, 3], label=angles_names[3], color='red')
+plt.show()
+
+
 for graph in range(len(mins)):
-    plt.plot(data[:, graph], label='elbow', color='skyblue')
+    plt.plot(data[:, graph], label=angles_names[graph], color='skyblue')
     plt.axhline(mins[graph], color='red')
-    plt.axhline(maxs[graph] + tolerances[0], color='red')
-    plt.axhline(maxs[graph] - tolerances[0], color='red')
+    plt.fill_between(x=range(data.shape[0]), y1=maxs[graph] + tolerances[graph], y2=maxs[graph] - tolerances[graph])
     plt.axhline(mids[graph], color='orange')
     plt.show()
 
-
-
-
-# multiple line plot
-# plt.plot(data[:, 0], label='elbow', color='skyblue')
-# plt.plot(data[:, 1], label='armpit', color='red')
-# plt.plot(data[:, 2], label='hip', color='green')
-# plt.plot(data[:, 3], label='knee', color='orange')
-# plt.plot('x', 'y2', data=df, marker='', color='olive', linewidth=2)
-# plt.plot('x', 'y3', data=df, marker='', color='olive', linewidth=2, linestyle='dashed', label="toto")
-# plt.plot('x', 'y3', data=df, marker='', color='olive', linewidth=2, linestyle='dashed', label="toto")
-
+# fig, axs = plt.subplots(len(mins))
+# plt.tight_layout()
+# for i in range(len(mins)):
+#     axs[i].set_title(angles_names[i])
+#     axs[i].plot(data[:, i], label='elbow', color='skyblue')
+#     axs[i].axhline(mins[i], color='red')
+#     axs[i].axhline(maxs[i] + tolerances[0], color='red')
+#     axs[i].axhline(maxs[i] - tolerances[0], color='red')
+#     axs[i].axhline(mids[i], color='orange')
+# plt.show()
+# plt.close("all")

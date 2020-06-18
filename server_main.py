@@ -40,13 +40,18 @@ exercise = None
 frames = []
 number_frames = 1
 file = None
+file_name = None
 
 
 # trigger del socket
 @socketio.on('connect')
 def connected():
     global exercise
+    global file_name
+
     print(colored('> Client conencted', 'red'))
+
+    file_name = str(datetime.now())+".csv"
 
     # istanzio tutto ciò che serve una volta sola
     set_logger()
@@ -104,10 +109,10 @@ def ingestImage(imageDataUrl):
         # debuggin
 
         for element in preprocessed_x[1]:
-            file = open("debugging/debugging.csv", "a+")
+            file = open("debugging/"+file_name, "a+")
             file.write(str(element) + ",")
             file.close()
-        file = open("debugging/debugging.csv", "a+")
+        file = open("debugging/"+file_name, "a+")
         file.write("\n")
         file.close()
         print(colored(preprocessed_x, 'green'))
