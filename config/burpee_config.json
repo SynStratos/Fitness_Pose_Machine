@@ -5,14 +5,14 @@
     "s_e": [],
     "s_w": []
   },
-  "push_pull": ["push", "push", "pull", "pull"],
-  "mins": [50, 65, 160, 160],
-  "maxs": [168, 169, 67, 51],
-  "mids": [110, 120, 115, 105],
-  "angles_order": [[2,3], [0,1]],
+  "push_pull": [],
+  "mins": [],
+  "maxs": [],
+  "mids": [],
+  "angles_order": [],
   "repetition_timeout": 4,
   "total_timeout": 20,
   "n_repetition": 10,
-  "tolerance": [12, 12, 20, 16],
-  "number_of_spikes": [1, 1, 1, 1]
+  "tolerance": [],
+  "number_of_spikes": []
 }
