@@ -1,15 +1,9 @@
 import json
-import time
 import os
-import base64
-from threading import Thread
 
 from termcolor import colored
-from datetime import datetime
-import cv2
 import numpy as np
 from copy import copy
-from datetime import datetime
 
 
 from logger import set_logger, log
@@ -17,11 +11,8 @@ from exceptions import *
 from pose_estimation import process_image
 from utils.angles import preprocess_angles
 from utils.image import *
-from exercises.exercise import Exercise
+
 from exercises.thruster import Thruster
-
-
-
 
 # vars globali
 exercise = None
@@ -31,6 +22,11 @@ file = None
 
 
 def ingest_image_local(image):
+    """
+
+    @param image:
+    @return:
+    """
     global frames
     global exercise
     global number_frames
@@ -80,7 +76,18 @@ def ingest_image_local(image):
 
 
 def ingest_video_local(exercise, path, number_of_frames, fps, w=None, h=None, rotation=0, show_joints=False):
+    """
 
+    @param exercise:
+    @param path:
+    @param number_of_frames:
+    @param fps:
+    @param w:
+    @param h:
+    @param rotation:
+    @param show_joints:
+    @return:
+    """
     video = cv2.VideoCapture(path)
 
     width = video.get(3)

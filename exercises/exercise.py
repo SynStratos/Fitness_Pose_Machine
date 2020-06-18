@@ -6,9 +6,6 @@ from logger import log
 
 
 class Exercise:
-    """
-
-    """
     mids = None
 
     STATES = [
@@ -34,32 +31,49 @@ class Exercise:
 
         self.config = config
         self.name = config["exercise_name"]
+
+        log.info("Creating a {} exercise!".format(self.name))
+
         self.angles = config["angles_names"]
+        # select which angles have to be checked for each respective side
         self.angles_index = config["angles_to_check"][side]
+        # define if the expected movement for each angle is a push or a pull
         self.push_pull = config["push_pull"]
         self.mins = config["mins"]
         self.maxs = config["maxs"]
         self.mids = config["mids"]
+        # expected order of angles reaching spikes
         self.angles_order = config["angles_order"]
+        # timeout for a single repetition expressed in seconds
         self.rep_timeout = config["repetition_timeout"]
+        # maximum consecutive timeouts (expressed in seconds) before exiting the session
         self.tot_timeout = config["total_timeout"]
+        # number of total repetitions expected to end the exercise
         self.n_repetition = config["n_repetition"]
-
+        # tolerance for the high threshold of angles' movements
         self.tolerance = config["tolerance"]
-
+        # number of times each angle has to reach the threshold for the repetition to be good
         self.number_of_spikes = copy(config["number_of_spikes"])
         self.n_angles = len(self.angles_index)
-
+        # set of further check methods to be applied to some specific angles (works on indexes)
         self.CHECKS = [None] * self.n_angles
 
         self.fps = fps
 
+        # counter of frame for each repetition
         self.time = 0
+
+        # array to track the status of each angle
         self.states = [0]*self.n_angles
+        # array to track the output of each angle
         self.outputs = [0]*self.n_angles
+        # array to track the timestamp in which each angle reaches its threshold/good condition
         self.timestamps = [0]*self.n_angles
+        # calculate number of timeouts before exiting
         self.n_timeout = int(self.tot_timeout / self.rep_timeout)
+        # countdown before a single repetition timeout calculated in frames
         self.countdown = int(fps * self.rep_timeout)
+        # variable to track if a timeout has been reached
         self.timed_out = False
 
         self.num_good_reps = 0
@@ -69,6 +83,9 @@ class Exercise:
         self.index_to_keep = []
 
     def __reset__(self):
+        """
+        resets all the counters and tracking arrays at the end of a repetition (good, bad or timeout)
+        """
         self.states = [0] * self.n_angles
         log.debug("states before " + str(self.states))
         log.debug("index_to_keep " + str(self.index_to_keep))
@@ -87,6 +104,10 @@ class Exercise:
         log.debug("states then " + str(self.states))
 
     def __check_pull_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
+        """
+        method that checks a pull movement frame.
+        the complementary value is calculated for each in order to use the method to check a push frame
+        """
         angle = abs(180 - angle)
         _min = abs(180 - _min)
         _max = abs(180 - _max)
@@ -96,7 +117,12 @@ class Exercise:
 
     def __check_push_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
         """
-
+        method that checks a push movement frame.
+        angle: the value of the angle to be checked
+        index: the index corresponding to the angle in each structure contained in the class
+        _min: minimum value for that angle
+        _max: maximum value for that angle
+        mid_point: mid value for that angle
         """
         if self.CHECKS[index]:
             try:
@@ -121,7 +147,7 @@ class Exercise:
             elif angle >= mid_point:
                 self.states[index] = 2
             elif (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
-                #goes directly to top value, maybe skipped frames
+                # goes directly to top value, maybe skipped frames
                 self.states[index] = 3
 
         # state 'rep_going'
@@ -189,6 +215,9 @@ class Exercise:
         return True, ""
 
     def __check_repetition__(self):
+        """
+        method that checks that a ended repetition was good or bad. if bad it outputs the kind of error.
+        """
         if len(set(self.outputs)) == 1 and self.outputs[0] == 1:
             return self.__check_order__()
         else:
@@ -197,10 +226,13 @@ class Exercise:
             else:
                 s = ""
                 for i, o in enumerate(self.outputs):
-                    s += "Movement for {} was {}! \n".format(self.angles[i], self.OUTPUTS[o]) #TODO: FIX THIS IN ONLY ONE MESSAGE
+                    s += "Movement for {} was {}! \n".format(self.angles[i], self.OUTPUTS[o])
             return False, s
 
     def process_frame(self, frame, **kwargs):
+        """
+        ingest the frame and check each angle contained in it.
+        """
         repetition_ended = False
         for i in range(len(self.angles)):
             if self.push_pull[i] == "push":

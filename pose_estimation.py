@@ -44,6 +44,12 @@ thre1, thre2 = pose_config['thre1'], pose_config['thre2']
 
 
 def _mid_joint(i, joints):
+    """
+    given a list containing two joints, it calculates a new join between them
+    @param i: set of two indexes
+    @param joints: set of joints
+    @return: returns the generated joint
+    """
     if type(i) == list:
         if len(i) == 2:
             x1, y1 = joints[i[0]]
@@ -59,6 +65,11 @@ def _mid_joint(i, joints):
 
 
 def _get_angles(joints):
+    """
+    method to calculate a set of specific angles starting from the joints extracted from the used pose estimation model
+    @param joints: joints extracted from the pose estimation model
+    @return: returns a set of angles calculated over the specified joints
+    """
     angles = {
         "elbow_sx": (5, 6, 7),
         "elbow_dx": (2, 3, 4),
@@ -76,7 +87,8 @@ def _get_angles(joints):
         "hand_hip_knee_sx": (12, 11, 7),
         "hand_hip_knee_dx": (9, 8, 4),
         "hand_hip_foot_sx": (13, 11, 7),
-        "hand_hip_foot_dx": (10, 8, 4)
+        "hand_hip_foot_dx": (10, 8, 4),
+        "head_hip_feet": (1, [11, 8], [10, 13])  # unisco testa - centro dei fianchi e centro dei piedi
         # TODO: add angle between hand-hip-foot -> useful for lateral sight e.g. burpees
     }
 
@@ -90,16 +102,6 @@ def _get_angles(joints):
 
             a_deg = create_angle(v1, v2, v3)
 
-            # p12 = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-            # p13 = np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
-            # p23 = np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
-            #
-            # a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
-            #
-            # a_deg = math.degrees(a)  # *180/math.pi
-            #
-            # # round to 2 decimal (more? less?)
-            # a_deg = round(a_deg, 2)
         except Exception as e:
             log.debug("Exception for angle {}: {}".format(k, str(e)))
             a_deg = 0  #TODO: set to None (?)
@@ -110,6 +112,12 @@ def _get_angles(joints):
 
 
 def visualize_person(canvas, person):
+    """
+    debugging method to plot the extracted joints on the image
+    @param canvas:
+    @param person:
+    @return:
+    """
     cmap = get_cmap('hsv')
 
     for i, point in enumerate(person):

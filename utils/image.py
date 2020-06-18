@@ -29,6 +29,10 @@ def rotate_image(mat, angle):
 
 
 def image_resize(image, width=None, height=None, inter=cv2.INTER_AREA):
+    """
+    method to resize the image given a certain width and/or height
+    @return: returns the processed image
+    """
     # initialize the dimensions of the image to be resized and
     # grab the image size
     dim = None

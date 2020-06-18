@@ -2,6 +2,12 @@ import numpy as np
 
 
 def get_orientation(jsx, jdx):
+    """
+    given the foot joints checks the sight direction of the person
+    @param jsx: left foot
+    @param jdx: right foot
+    @return: returns a string representing the direction "south-east" or "south-west"
+    """
     _, y1 = jsx
     _, y2 = jdx
 
