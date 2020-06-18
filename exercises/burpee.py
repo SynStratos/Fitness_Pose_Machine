@@ -25,17 +25,18 @@ def _check_on_the_ground_(foot, shoulder, range):
     else:
         return False
 
-#NOTE: sample - not correct array
-CHECKS = [
-    None,
-    None,
-    _check_hands_,
-    None,
-    _check_on_the_ground_,
-    None
-]
 
 
 class Burpee(Exercise):
     def __init__(self, config, side, fps):
         super().__init__(config, side, fps)
+
+        #TODO: va letto dal json? o comunque va impostato in modo preciso
+        self.CHECKS = [
+            None,
+            None,
+            _check_hands_,
+            None,
+            _check_on_the_ground_,
+            None
+        ]

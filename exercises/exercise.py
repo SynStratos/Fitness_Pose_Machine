@@ -4,26 +4,29 @@ from copy import copy
 
 from logger import log
 
-STATES = [
-         'none',
-         'start',
-         'rep_going',
-         'top',
-         'over_top'
-]
-
-OUTPUTS = [
-          'no_rep',
-          'rep_ok',
-          'rep_bad'
-          ]
-
 
 class Exercise:
     """
 
     """
     mids = None
+
+    STATES = [
+        'none',
+        'start',
+        'rep_going',
+        'top',
+        'over_top'
+    ]
+
+    OUTPUTS = [
+        'no_rep',
+        'rep_ok',
+        'rep_bad'
+    ]
+
+    CHECKS = []
+
     def __init__(self, config, side, fps):
         if side not in ['s_e', 's_w']: raise Exception("Unexpected 'side' value.")
         with open(config) as f:
@@ -46,6 +49,8 @@ class Exercise:
 
         self.number_of_spikes = copy(config["number_of_spikes"])
         self.n_angles = len(self.angles_index)
+
+        self.CHECKS = [None] * self.n_angles
 
         self.fps = fps
 
@@ -81,18 +86,27 @@ class Exercise:
 
         log.debug("states then " + str(self.states))
 
-    def __check_pull_frame__(self, angle, index, _min, _max, mid_point):
+    def __check_pull_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
         angle = abs(180 - angle)
         _min = abs(180 - _min)
         _max = abs(180 - _max)
         mid_point = abs(180 - mid_point)
 
-        self.__check_push_frame__(angle, index, _min, _max, mid_point)
+        self.__check_push_frame__(angle, index, _min, _max, mid_point, **kwargs)
 
-    def __check_push_frame__(self, angle, index, _min, _max, mid_point):
+    def __check_push_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
         """
 
         """
+        if self.CHECKS[index]:
+            try:
+                self.outputs[index] = 1 if (self.CHECKS[index](angle, **kwargs) or self.outputs[index] == 1) else self.outputs[index]
+            except Exception as e:
+                log.error(str(e))
+                raise Exception(e)
+        # TODO: angoli di cui controllare SOLO le condizioni parametrizzate in funzione
+        # TODO: angoli di cui servono controllare i picchi e le condizioni
+
         # state 'none'
         if self.states[index] == 0:
 
@@ -106,6 +120,9 @@ class Exercise:
                 self.states[index] = 0
             elif angle >= mid_point:
                 self.states[index] = 2
+            elif (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
+                #goes directly to top value, maybe skipped frames
+                self.states[index] = 3
 
         # state 'rep_going'
         elif self.states[index] == 2:
@@ -117,7 +134,7 @@ class Exercise:
                 self.timestamps[index] = self.time
 
                 self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] <= 0:
+                if self.number_of_spikes[index] == 0:
                     self.outputs[index] = 2  # set to bad repetition
 
                 self.states[index] = 0
@@ -125,7 +142,7 @@ class Exercise:
             elif angle > (_max + self.tolerance[index]):
                 self.timestamps[index] = self.time
                 self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] <= 0:
+                if self.number_of_spikes[index] == 0:
                     self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 4
 
@@ -142,7 +159,7 @@ class Exercise:
             elif angle > (_max + self.tolerance[index]):
                 self.timestamps[index] = self.time
                 self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] <= 0:
+                if self.number_of_spikes[index] == 0:
                     self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 4
 
@@ -180,7 +197,7 @@ class Exercise:
             else:
                 s = ""
                 for i, o in enumerate(self.outputs):
-                    s += "Movement for {} was {}! \n".format(self.angles[i], OUTPUTS[o]) #TODO: FIX THIS IN ONLY ONE MESSAGE
+                    s += "Movement for {} was {}! \n".format(self.angles[i], self.OUTPUTS[o]) #TODO: FIX THIS IN ONLY ONE MESSAGE
             return False, s
 
     def process_frame(self, frame, **kwargs):

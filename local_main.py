@@ -18,6 +18,7 @@ from pose_estimation import process_image
 from utils.angles import preprocess_angles
 from utils.image import *
 from exercises.exercise import Exercise
+from exercises.thruster import Thruster
 
 
 
@@ -125,6 +126,6 @@ if __name__ == '__main__':
     with open(global_config) as f:
         global_config = json.load(f)
 
-    exercise = Exercise(config=ex_config, side='s_e', fps=global_config['fps'])
+    exercise = Thruster(config=ex_config, side='s_e', fps=global_config['fps'])
 
     ingest_video_local(exercise, video_file, number_of_frames=80, fps=global_config['fps'], h=180)
