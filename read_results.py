@@ -34,15 +34,3 @@ for graph in range(len(mins)):
     plt.fill_between(x=range(data.shape[0]), y1=maxs[graph] + tolerances[graph], y2=maxs[graph] - tolerances[graph])
     plt.axhline(mids[graph], color='orange')
     plt.show()
-
-# fig, axs = plt.subplots(len(mins))
-# plt.tight_layout()
-# for i in range(len(mins)):
-#     axs[i].set_title(angles_names[i])
-#     axs[i].plot(data[:, i], label='elbow', color='skyblue')
-#     axs[i].axhline(mins[i], color='red')
-#     axs[i].axhline(maxs[i] + tolerances[0], color='red')
-#     axs[i].axhline(maxs[i] - tolerances[0], color='red')
-#     axs[i].axhline(mids[i], color='orange')
-# plt.show()
-# plt.close("all")

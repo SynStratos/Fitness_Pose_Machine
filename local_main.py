@@ -6,13 +6,11 @@ from threading import Thread
 
 from termcolor import colored
 from datetime import datetime
-import eventlet
-
-eventlet.monkey_patch()
-
 import cv2
-import numpy
 import numpy as np
+from copy import copy
+from datetime import datetime
+
 
 from logger import set_logger, log
 from exceptions import *
@@ -22,8 +20,6 @@ from utils.image import *
 from exercises.exercise import Exercise
 
 
-from copy import copy
-from datetime import datetime
 
 
 # vars globali
@@ -70,12 +66,12 @@ def ingest_image_local(image):
             print(colored("Reps OK", 'green'))
             # send message to client per ripetizione corretta
         except CompleteExerciseException:
-            print(colored("Esercizio co mpletato", 'red'))
+            print(colored("Esercizio completato: ripetizioni finite!", 'green'))
         except NoneRepetitionException:
             print(colored("Esercizio in timeout senza ripetizioni", 'red'))
         except BadRepetitionException as bre:
             message = str(bre)
-            print(colored("Reps NO: " + message, 'red'))
+            print(colored("Reps BAD: " + message, 'red'))
         except TimeoutError:
             print(colored("Timeout", 'red'))
         finally:
@@ -83,15 +79,6 @@ def ingest_image_local(image):
 
 
 def ingest_video_local(exercise, path, number_of_frames, fps, w=None, h=None, rotation=0, show_joints=False):
-    """
-      method to ingest a video file
-      path: path to the file
-      fps: wanted frame per second
-      method: function to apply to each frame
-      w: width if resizing is needed
-      h: height if resizing is needed
-      rotation: degrees if rotation is needed
-      """
 
     video = cv2.VideoCapture(path)
 

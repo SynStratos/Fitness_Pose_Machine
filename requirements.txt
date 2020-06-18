@@ -1,0 +1,10 @@
+tensorflow-gpu
+opencv
+numpy
+pandas
+flask
+eventlet
+flask_socketio
+pillow
+matplotlib
+scipy

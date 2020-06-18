@@ -14,20 +14,22 @@ import cv2
 import numpy
 import numpy as np
 
+# socket
+from io import BytesIO
+from flask import Flask, copy_current_request_context
+from flask_socketio import SocketIO, emit
+
+from PIL import Image, ImageOps
+from copy import copy
+from datetime import datetime
+
 from logger import set_logger, log
 from exceptions import *
 from pose_estimation import process_image
 from utils.angles import preprocess_angles
 from exercises.exercise import Exercise
 
-# socket
-from io import BytesIO
-from flask import Flask, copy_current_request_context
-from flask_socketio import SocketIO, emit
-import base64
-from PIL import Image, ImageOps
-from copy import copy
-from datetime import datetime
+
 
 # avvio flask + socketio
 app = Flask(__name__)
@@ -68,19 +70,6 @@ def connected():
 @socketio.on('disconnect')
 def disconnect():
     print(colored('> Client disconnected', 'red'))
-
-
-# evento chiamato quando si fa l'upload di una immagine via client
-# @socketio.on('image-client')
-# def imageUpload(image):
-#     # processing dell'immagine
-#     print("Immagine arrivata dal client")
-#
-#     img = ImageOps.flip(Image.open(BytesIO(image)))
-#     buffer = BytesIO()
-#     img.save(buffer, format='Jpeg')
-#
-#     emit('image-server', buffer.getvalue())
 
 
 @socketio.on('image-client')
