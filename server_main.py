@@ -128,7 +128,8 @@ def ingestImage(imageDataUrl):
             # aggiungi ripetizione corretta
             # send message to client per esercizio finito e interrompi invio
             socketio.emit('message', 'Exercise Ended.')
-
+        except NoneRepetitionException:
+            print(colored("Esercizio in timeout senza ripetizioni", 'red'))
         except BadRepetitionException as bre:
             message = str(bre)
             print(colored("Reps NO: " + message, 'red'))

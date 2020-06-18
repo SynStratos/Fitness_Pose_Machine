@@ -2,6 +2,9 @@
 *.log
 debugging
 
+#videos
+*.mp4
+
 #Models
 *.h5
 *.pt
