@@ -32,7 +32,7 @@ with open('./config/global_config.json') as f:
 
 model_weights = os.path.join('./weights', g_config['model'])
 
-model = get_model(model_weights)
+model = None
 
 with open('./config/pose_estimation_config.json') as f:
     pose_config = json.load(f)
@@ -41,6 +41,15 @@ boxsize = pose_config['boxsize']
 scale_search = pose_config['scale_search']
 stride, padValue = pose_config['stride'], pose_config['padValue']
 thre1, thre2 = pose_config['thre1'], pose_config['thre2']
+
+
+def instantiate_model():
+    global model
+    model = get_model(model_weights)
+
+
+def _retrieve_model():
+    return model
 
 
 def _mid_joint(i, joints):
@@ -133,11 +142,11 @@ def visualize_person(canvas, person):
     plt.show()
 
 
-def process_image(image, model=model, features_method=_get_angles, show_joints=False):
+def process_image(image, features_method=_get_angles, show_joints=False):
+
     """
     this method gets an image as input and returns the extracted joints and further features from it
     :param image: frame image
-    :param model: model for joints prediction
     :param features_method: method to extract needed features - _get_angles by default
     :param show_joints: print image with joints (debug)
     :return: joints, features (angles)

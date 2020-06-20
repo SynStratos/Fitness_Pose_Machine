@@ -8,7 +8,7 @@ from copy import copy
 
 from logger import set_logger, log
 from exceptions import *
-from pose_estimation import process_image
+from pose_estimation import process_image, instantiate_model
 from utils.angles import preprocess_angles
 from utils.image import *
 
@@ -134,6 +134,8 @@ if __name__ == '__main__':
     global_config = os.path.join(os.getcwd(), "config/global_config.json")
 
     video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
+
+    instantiate_model()
 
     # TODO: get side
     with open(global_config) as f:

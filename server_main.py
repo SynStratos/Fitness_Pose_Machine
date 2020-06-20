@@ -25,7 +25,7 @@ from datetime import datetime
 
 from logger import set_logger, log
 from exceptions import *
-from pose_estimation import process_image
+from pose_estimation import process_image, instantiate_model
 from utils.angles import preprocess_angles
 from exercises.exercise import Exercise
 
@@ -55,6 +55,8 @@ def connected():
     print(colored('> Client conencted', 'red'))
 
     file_name = str(datetime.now())+".csv"
+
+    instantiate_model()
 
     # istanzio tutto ciò che serve una volta sola
     set_logger()
