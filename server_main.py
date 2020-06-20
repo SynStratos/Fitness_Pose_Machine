@@ -34,8 +34,7 @@ from exercises.exercise import Exercise
 # avvio flask + socketio
 app = Flask(__name__)
 app.config["SECRET_KEY"] = 'secret!'
-socketio = SocketIO(app, always_connect=True, engineio_logger=True, cors_allowed_origins='*', async_mode='eventlet',
-                    ping_timeout=7200, ping_interval=3600)
+socketio = SocketIO(app, always_connect=True, engineio_logger=True, cors_allowed_origins='*', async_mode='eventlet', ping_timeout=7200, ping_interval=3600)
 
 # vars globali
 exercise = None
@@ -147,4 +146,4 @@ def disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)

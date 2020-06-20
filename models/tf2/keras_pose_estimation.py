@@ -125,4 +125,5 @@ def get_model(weights):
     for layer in model.layers:
         layer.trainable = False
 
+    model.compile(optimizer='adam', loss="sparse_categorical_crossentropy")
     return model
