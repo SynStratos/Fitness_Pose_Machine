@@ -30,7 +30,6 @@ from utils.angles import preprocess_angles
 from exercises.exercise import Exercise
 
 
-
 # avvio flask + socketio
 app = Flask(__name__)
 app.config["SECRET_KEY"] = 'secret!'

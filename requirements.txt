@@ -1,5 +1,5 @@
 tensorflow-gpu
-opencv
+opencv-python
 numpy
 pandas
 flask
