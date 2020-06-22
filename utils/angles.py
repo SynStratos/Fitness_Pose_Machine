@@ -104,6 +104,9 @@ def create_angle(p1, p2, p3):
 
     a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
 
+    if np.isnan(a):
+        a = 0
+
     a_deg = math.degrees(a)  # *180/math.pi
 
     # round to 2 decimal (more? less?)
