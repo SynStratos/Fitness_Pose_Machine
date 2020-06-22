@@ -86,9 +86,8 @@ class Exercise:
         """
         resets all the counters and tracking arrays at the end of a repetition (good, bad or timeout)
         """
+        log.debug("Resetting exercise variables after a single repetition.")
         self.states = [0] * self.n_angles
-        log.debug("states before " + str(self.states))
-        log.debug("index_to_keep " + str(self.index_to_keep))
         for i in self.index_to_keep:
             self.states[i] = 1
         self.index_to_keep = []
@@ -97,11 +96,8 @@ class Exercise:
 
         self.number_of_spikes = copy(self.config["number_of_spikes"])
 
-        log.debug("number_of_spikes: " + str(self.number_of_spikes))
         # self.n_timeout = int(self.tot_timeout / self.rep_timeout)
         self.countdown = int(self.fps * self.rep_timeout)
-
-        log.debug("states then " + str(self.states))
 
     def __check_pull_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
         """
@@ -200,6 +196,7 @@ class Exercise:
         return: True se ordine corretto, False se ordine errato
         """
         if not self.angles_order:
+            # If it is not needed to check angles order, value in the json must be set to None
             return True
         elif len(self.angles_order) < 2:
             raise Exception("cant check order of a single element")
@@ -229,26 +226,29 @@ class Exercise:
                     s += "Movement for {} was {}! \n".format(self.angles[i], self.OUTPUTS[o])
             return False, s
 
-    def process_frame(self, frame, **kwargs):
+    def process_frame(self, frame, exercise_over=False, **kwargs):
         """
         ingest the frame and check each angle contained in it.
         """
-        repetition_ended = False
-        for i in range(len(self.angles)):
-            if self.push_pull[i] == "push":
-                self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
-            elif self.push_pull[i] == "pull":
-                self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
-
+        if exercise_over:
+            repetition_ended = True
+        else:
             repetition_ended = False
+            for i in range(len(self.angles)):
+                if self.push_pull[i] == "push":
+                    self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
+                elif self.push_pull[i] == "pull":
+                    self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
 
-            if self.outputs[i] in [1, 2] and self.states[i] == 1:
-                repetition_ended = True
-                self.index_to_keep.append(i)
+                repetition_ended = False
+
+                if self.outputs[i] in [1, 2] and self.states[i] == 1:
+                    repetition_ended = True
+                    self.index_to_keep.append(i)
         self.time += 1
-        log.debug("states: " + str(self.states))
-        log.debug("outputs: " + str(self.outputs))
-        log.debug("spikes: " + str(self.number_of_spikes))
+        # log.debug("states: " + str(self.states))
+        # log.debug("outputs: " + str(self.outputs))
+        # log.debug("spikes: " + str(self.number_of_spikes))
         if self.countdown == 0:
             self.time_out_series += 1
             log.debug("Countdown over.")
@@ -261,7 +261,7 @@ class Exercise:
             if self.timed_out and (self.countdown < 0):
                 self.n_timeout -= 1
                 if self.n_timeout == 0:
-                    log.debug("Maximum number of timeouts reached.")
+                    log.info("Maximum number of timeouts reached.")
                     raise TimeoutError
             elif not self.timed_out and (self.countdown < 0):
                 log.debug("First timeout reached.")
@@ -274,7 +274,7 @@ class Exercise:
 
             if len(set(self.outputs)) == 1 and self.outputs[0] == 0:
                 self.__reset__()
-                log.debug("Timeout reached: no repetition completed.")
+                log.info("Timeout reached: no repetition completed.")
                 raise NoneRepetitionException
             else:
                 good, message = self.__check_repetition__()

@@ -1,5 +1,7 @@
 import numpy as np
 
+from exceptions import FeetException
+
 
 def get_orientation(jsx, jdx):
     """
@@ -12,15 +14,16 @@ def get_orientation(jsx, jdx):
     _, y2 = jdx
 
     # (0;0) is the top left corner of the image
+    # TODO: decide if need to add a certain padding around each joint, to avoid minimal differences between joints
     if all((y1, y2)):
         if y1 < y2:
             return "s_e"
         if y1 > y2:
             return "s_w"
         else:
-            raise NotImplementedError
+            raise FeetException('Feet joints are at the same height. (possible frontal view)')
     else:
-        raise Exception('One or both joints not found.')
+        raise FeetException('One or both joints not found.')
 
 
 def pad_right_down_corner(img, stride, pad_value):

@@ -28,3 +28,19 @@ class GoodRepetitionException(Exception):
     """
     def __init__(self, *args):
         super(GoodRepetitionException, self).__init__(*args)
+
+
+class NotFoundPersonException(Exception):
+    """
+    exception raised when a person is not found during the pose estimation
+    """
+    def __init__(self, *args):
+        super(NotFoundPersonException, self).__init__(*args)
+
+
+class FeetException(Exception):
+    """
+    exception raised when feet can't be found in the frame
+    """
+    def __init__(self, *args):
+        super(FeetException, self).__init__(*args)

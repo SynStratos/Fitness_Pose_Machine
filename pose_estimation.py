@@ -13,6 +13,7 @@ from logger import log
 from models.tf2.keras_pose_estimation import get_model
 from utils.pose import pad_right_down_corner
 from utils.angles import create_angle
+from exceptions import *
 
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[2, 3], [2, 6], [3, 4], [4, 5], [6, 7], [7, 8], [2, 9], [9, 10], [10, 11], [2, 12], [12, 13], [13, 14],
@@ -142,13 +143,15 @@ def visualize_person(canvas, person):
     plt.show()
 
 
-def process_image(image, features_method=_get_angles, show_joints=False):
+def process_image(image, accept_missing=True, features_method=_get_angles, show_joints=False):
 
     """
     this method gets an image as input and returns the extracted joints and further features from it
     :param image: frame image
     :param features_method: method to extract needed features - _get_angles by default
     :param show_joints: print image with joints (debug)
+    :param accept_missing: a not recognized person frame is accepted setting all joints to None and the process
+        continues. A proper exception is raised if False.
     :return: joints, features (angles)
     """
     #### sezione per indivudare i joint con il modello e mapparli - leave as it is
@@ -330,7 +333,15 @@ def process_image(image, features_method=_get_angles, show_joints=False):
         persons.append(person)
 
     # TODO: define method to extract the single person if multiple
-    person = persons[0]
+    try:
+        person = persons[0]
+    except:
+        if accept_missing:
+            log.warning("No person found in this frame: setting all joints to None.")
+            person = [None]*19
+        else:
+            # may be useful for initial settings to check the joints of the person are visible
+            raise NotFoundPersonException("Unable to find a person joints in the frame.")
     ####
     # joints = None
     if show_joints:
