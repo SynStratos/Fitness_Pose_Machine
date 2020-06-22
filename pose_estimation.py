@@ -338,7 +338,7 @@ def process_image(image, accept_missing=True, features_method=_get_angles, show_
     except:
         if accept_missing:
             log.warning("No person found in this frame: setting all joints to None.")
-            person = [None]*19
+            person = [[None, None]]*19
         else:
             # may be useful for initial settings to check the joints of the person are visible
             raise NotFoundPersonException("Unable to find a person joints in the frame.")

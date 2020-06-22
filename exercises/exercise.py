@@ -193,7 +193,7 @@ class Exercise:
 
     def __check_order__(self):
         """
-        return: True se ordine corretto, False se ordine errato
+        return: True if angles order is correct, False if angles order is wrong
         """
         if not self.angles_order:
             # If it is not needed to check angles order, value in the json must be set to None
