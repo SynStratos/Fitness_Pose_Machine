@@ -111,3 +111,24 @@ def create_angle(p1, p2, p3):
 
     # round to 2 decimal (more? less?)
     return round(a_deg, 2)
+
+
+def mid_joint(i, joints):
+    """
+    given a list containing two joints, it calculates a new join between them
+    @param i: set of two indexes
+    @param joints: set of joints
+    @return: returns the generated joint
+    """
+    if type(i) == list:
+        if len(i) == 2:
+            x1, y1 = joints[i[0]]
+            x2, y2 = joints[i[1]]
+
+            x = (x1 + x2) / 2
+            y = (y1 + y2) / 2
+            return (x, y)
+        else:
+            raise Exception("Mid joint for more than 2 points not implemented yet.")
+    else:
+        return joints[i]

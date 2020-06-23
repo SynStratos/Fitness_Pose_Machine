@@ -1,5 +1,7 @@
 from exercises.exercise import Exercise
-from utils.angles import create_angle
+from utils.angles import create_angle, mid_joint
+
+from logger import log
 
 ex_config = "./config/burpee_config.json"
 
@@ -18,6 +20,19 @@ def _check_hands_(angle, **kwargs):
 
     joints = kwargs['joints']
 
+    # check if the person is standing
+    neck = joints[1]
+    feet_center = mid_joint([10, 13], joints)
+    x_parallel = [0, feet_center[1]]
+
+    vertical_angle = create_angle(neck, feet_center, x_parallel)
+
+    # TODO: to be tuned
+    if 90 <= vertical_angle <= 70:
+        log.debug("Person is not standing.")
+        return False
+
+    # check if hands are close
     hand_sx = joints[7]
     hand_dx = joints[4]
 
@@ -57,15 +72,21 @@ def _check_on_the_ground_(angle, **kwargs):
     else:
         raise Exception("Unespected value for orientation.")
 
+    #TODO: definire i valori corretti di questo range
     range = [30, 60]
 
     foot_x, foot_y = foot
     shoulder_x, shoulder_y = shoulder
 
+    if foot_y < shoulder_y:
+        log.debug("Foot is lower than shoulder.")
+        return False
+
     angle_ground = create_angle(foot, shoulder, (foot_x, shoulder_y))
 
     # TODO controlla angolo con range di reference
     if range[0] <= angle_ground <= range[-1]:
+        log.debug("Person is lying on the floor.")
         return True
     else:
         return False

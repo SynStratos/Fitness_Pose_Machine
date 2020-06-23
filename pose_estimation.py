@@ -1,6 +1,5 @@
 import json
 import os
-import types
 import pylab as plt
 import cv2
 from matplotlib.pyplot import gcf
@@ -12,7 +11,7 @@ from scipy.ndimage import gaussian_filter
 from logger import log
 from models.tf2.keras_pose_estimation import get_model
 from utils.pose import pad_right_down_corner
-from utils.angles import create_angle
+from utils.angles import create_angle, mid_joint
 from exceptions import *
 
 # find connection in the specified sequence, center 29 is in the position 15
@@ -53,27 +52,6 @@ def _retrieve_model():
     return model
 
 
-def _mid_joint(i, joints):
-    """
-    given a list containing two joints, it calculates a new join between them
-    @param i: set of two indexes
-    @param joints: set of joints
-    @return: returns the generated joint
-    """
-    if type(i) == list:
-        if len(i) == 2:
-            x1, y1 = joints[i[0]]
-            x2, y2 = joints[i[1]]
-
-            x = (x1 + x2) / 2
-            y = (y1 + y2) / 2
-            return (x, y)
-        else:
-            raise Exception("Mid joint for more than 2 points not implemented yet.")
-    else:
-        return joints[i]
-
-
 def _get_angles(joints):
     """
     method to calculate a set of specific angles starting from the joints extracted from the used pose estimation model
@@ -106,9 +84,9 @@ def _get_angles(joints):
     for k, v in angles.items():
         try:
 
-            v1 = _mid_joint(v[0], joints)
-            v2 = _mid_joint(v[1], joints)
-            v3 = _mid_joint(v[2], joints)
+            v1 = mid_joint(v[0], joints)
+            v2 = mid_joint(v[1], joints)
+            v3 = mid_joint(v[2], joints)
 
             a_deg = create_angle(v1, v2, v3)
 
