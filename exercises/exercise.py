@@ -32,6 +32,8 @@ class Exercise:
         self.config = config
         self.name = config["exercise_name"]
 
+        self.side = side
+
         log.info("Creating a {} exercise!".format(self.name))
 
         self.angles = config["angles_names"]
@@ -42,6 +44,7 @@ class Exercise:
         self.mins = config["mins"]
         self.maxs = config["maxs"]
         self.mids = config["mids"]
+        self.medians = config["medians"]
         # expected order of angles reaching spikes
         self.angles_order = config["angles_order"]
         # timeout for a single repetition expressed in seconds
@@ -235,6 +238,9 @@ class Exercise:
         """
         ingest the frame and check each angle contained in it.
         """
+
+        kwargs['side'] = self.side
+
         if exercise_over:
             repetition_ended = True
         else:

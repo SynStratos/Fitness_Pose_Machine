@@ -1,3 +1,8 @@
+import os, logging
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+logging.getLogger('tensorflow').disabled = True
+
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Activation, Lambda, Conv2D
 from tensorflow.keras.layers import MaxPool2D, Concatenate

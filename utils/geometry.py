@@ -38,16 +38,15 @@ def mid_joint(i, joints):
         return joints[i]
 
 
-def create_angle(p1, p2, p3):
+def create_angle(p1, p2, p3, decimal=2):
     """
     auxiliary method that finds the value of the angle given three points in 2D space
     @param p1: first point
     @param p2: second point
-    @param p3: third point
+    @param p3: third point or a reference axis ["axis_x", "axis_y"]
     @return: returns the angle in degrees
     """
 
-    # x1, y1 = p1
     x2, y2 = p2
 
     if "axis_y" in p3:
@@ -67,12 +66,8 @@ def create_angle(p1, p2, p3):
 
         a_deg = math.degrees(a)  # *180/math.pi
 
-    except Exception as e:
-        log.debug("Exception for angle - ", str(e))
+    except:
+        log.debug("Exception for angle")
         a_deg = 0
 
-    # round to 2 decimal (more? less?)
-    return round(a_deg, 2)
-
-
-
+    return round(a_deg, decimal)

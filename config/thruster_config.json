@@ -9,6 +9,7 @@
   "mins": [50, 65, 160, 160],
   "maxs": [168, 169, 67, 51],
   "mids": [110, 120, 115, 105],
+  "medians": [110, 120, 115, 105],
   "angles_order": [[2,3], [0,1]],
   "repetition_timeout": 4,
   "total_timeout": 20,

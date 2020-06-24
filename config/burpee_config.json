@@ -1,18 +1,19 @@
 {
   "exercise_name": "Burpee",
-  "angles_names": ["Standing", "Hands"],
+  "angles_names": ["Standing", "Hands", "Floor"],
   "angles_to_check": {
-    "s_e": [-1, -1],
-    "s_w": [-1, -1]
+    "s_e": [-1, -1, -1],
+    "s_w": [-1, -1, -1]
   },
-  "push_pull": ["push", "push"],
-  "mins": [100, null],
-  "maxs": [180, null],
-  "mids": [140, 140],
+  "push_pull": ["push", "push", "push"],
+  "mins": [100, null, null],
+  "maxs": [180, null, null],
+  "mids": [140, 140, 140],
+  "medians": [140, 140, 140],
   "angles_order": null,
-  "repetition_timeout": 4,
+  "repetition_timeout": 10,
   "total_timeout": 20,
   "n_repetition": 10,
-  "tolerance": [20, null],
-  "number_of_spikes": [1, 0]
+  "tolerance": [20, null, null],
+  "number_of_spikes": [1, 0, 0]
 }

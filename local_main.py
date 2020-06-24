@@ -49,7 +49,7 @@ def ingest_image_local(image):
     if len(frames) >= 3:
         # tic = time.clock()
         # preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
-        preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.mids)
+        preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians)
         # debuggin
 
         # with open("debugging/debugging.csv", "w+") as file:
@@ -133,6 +133,7 @@ if __name__ == '__main__':
     # ex_config = os.path.join(os.getcwd(), "config/burpee_config.json") #TODO: port to exercise class
     global_config = os.path.join(os.getcwd(), "config/global_config.json")
 
+    # video_file = os.path.join(os.getcwd(), "test_videos/burpee_2.mp4")
     video_file = os.path.join(os.getcwd(), "test_videos/burpee_1.mp4")
     # video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
 
