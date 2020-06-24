@@ -11,7 +11,7 @@ from scipy.ndimage import gaussian_filter
 from logger import log
 from models.tf2.keras_pose_estimation import get_model
 from utils.pose import pad_right_down_corner
-from utils.angles import create_angle, mid_joint
+from utils.geometry import mid_joint, create_angle
 from exceptions import *
 
 # find connection in the specified sequence, center 29 is in the position 15
@@ -76,25 +76,26 @@ def _get_angles(joints):
         "hand_hip_knee_dx": (9, 8, 4),
         "hand_hip_foot_sx": (13, 11, 7),
         "hand_hip_foot_dx": (10, 8, 4),
-        "head_hip_feet": (1, [11, 8], [10, 13])  # unisco testa - centro dei fianchi e centro dei piedi
+        "head_hip_feet": (1, [11, 8], [10, 13]),  # unisco testa - centro dei fianchi e centro dei piedi
+        "standing": (1, [10, 13], "axis_x")
         # TODO: add angle between hand-hip-foot -> useful for lateral sight e.g. burpees
     }
 
     ang = []
     for k, v in angles.items():
         try:
-
             v1 = mid_joint(v[0], joints)
             v2 = mid_joint(v[1], joints)
-            v3 = mid_joint(v[2], joints)
+            if "axis" not in str(v[2]):
+                v3 = mid_joint(v[2], joints)
+            else:
+                v3 = v[2]
 
             a_deg = create_angle(v1, v2, v3)
+        except:
+            a_deg = 0
 
-        except Exception as e:
-            log.debug("Exception for angle {}: {}".format(k, str(e)))
-            a_deg = 0  #TODO: set to None (?)
-        finally:
-            ang.append(a_deg)
+        ang.append(a_deg)
 
     return ang
 
@@ -112,8 +113,8 @@ def visualize_person(canvas, person):
         if all(point):  # is not (None, None):
             rgba = np.array(cmap(1 - i / 18. - 1. / 36))
             rgba[0:3] *= 255
-            cv2.putText(canvas, str(i), org=point, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=colors[i])
-            # cv2.circle(canvas, point[0:2], 4, colors[i], thickness=-1)
+            #cv2.putText(canvas, str(i), org=point, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=colors[i])
+            cv2.circle(canvas, point[0:2], 4, colors[i], thickness=-1)
             to_plot = cv2.addWeighted(canvas, 0.3, canvas, 0.7, 0)
             plt.imshow(to_plot[:, :, [2, 1, 0]])
             fig = gcf()
@@ -125,12 +126,12 @@ def process_image(image, accept_missing=True, features_method=_get_angles, show_
 
     """
     this method gets an image as input and returns the extracted joints and further features from it
-    :param image: frame image
-    :param features_method: method to extract needed features - _get_angles by default
-    :param show_joints: print image with joints (debug)
-    :param accept_missing: a not recognized person frame is accepted setting all joints to None and the process
+    @param image: frame image
+    @param features_method: method to extract needed features - _get_angles by default
+    @param show_joints: print image with joints (debug)
+    @param accept_missing: a not recognized person frame is accepted setting all joints to None and the process
         continues. A proper exception is raised if False.
-    :return: joints, features (angles)
+    @return joints, features (angles)
     """
     #### sezione per indivudare i joint con il modello e mapparli - leave as it is
     multiplier = [x * boxsize / image.shape[0] for x in scale_search]

@@ -5,7 +5,7 @@ from termcolor import colored
 import numpy as np
 from copy import copy
 
-
+from exercises.burpee import Burpee
 from logger import set_logger, log
 from exceptions import *
 from pose_estimation import process_image, instantiate_model
@@ -42,23 +42,22 @@ def ingest_image_local(image):
     new_frame = image
 
     # lo gestiamo separatamente all'arrivo di ogni frame senza il resto dello script? controllare i tempi di esecuzione
-    joints_person, processed_frame = process_image(new_frame)
+    joints_person, processed_frame = process_image(new_frame, show_joints=False)
     joints_total.append(joints_person)
     frames.append(processed_frame)
 
     if len(frames) >= 3:
         # tic = time.clock()
-        preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
+        # preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
+        preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians)
         # debuggin
 
-        for element in preprocessed_x[1]:
-            file = open("debugging/debugging.csv", "a+")
-            file.write(str(element) + ",")
-            file.close()
-        file = open("debugging/debugging.csv", "a+")
-        file.write("\n")
-        file.close()
-        print(colored(preprocessed_x[1], 'green'))
+        # with open("debugging/debugging.csv", "w+") as file:
+        #     for element in preprocessed_x[1]:
+        #         file.write(str(element[:, exercise.angles_index]) + ",")
+        #     file.write("\n")
+        #
+        # print(colored(preprocessed_x[1][:, exercise.angles_index], 'green'))
 
         joints = joints_total[-2]
 
@@ -130,10 +129,13 @@ def ingest_video_local(exercise, path, number_of_frames, fps, w=None, h=None, ro
 if __name__ == '__main__':
     # istanzio tutto ciò che serve una volta sola
     set_logger()
-    ex_config = os.path.join(os.getcwd(), "config/thruster_config.json")
+    # ex_config = os.path.join(os.getcwd(), "config/thruster_config.json")
+    # ex_config = os.path.join(os.getcwd(), "config/burpee_config.json") #TODO: port to exercise class
     global_config = os.path.join(os.getcwd(), "config/global_config.json")
 
-    video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
+    # video_file = os.path.join(os.getcwd(), "test_videos/burpee_2.mp4")
+    video_file = os.path.join(os.getcwd(), "test_videos/burpee_1.mp4")
+    # video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
 
     instantiate_model()
 
@@ -141,6 +143,7 @@ if __name__ == '__main__':
     with open(global_config) as f:
         global_config = json.load(f)
 
-    exercise = Thruster(config=ex_config, side='s_e', fps=global_config['fps'])
+    # exercise = Thruster(config=ex_config, side='s_e', fps=global_config['fps'])
+    exercise = Burpee(config=None, side='s_e', fps=global_config['fps'])
 
-    ingest_video_local(exercise, video_file, number_of_frames=80, fps=global_config['fps'], h=180)
+    ingest_video_local(exercise, video_file, number_of_frames=80, fps=global_config['fps'], h=global_config['height'])

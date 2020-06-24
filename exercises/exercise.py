@@ -32,6 +32,8 @@ class Exercise:
         self.config = config
         self.name = config["exercise_name"]
 
+        self.side = side
+
         log.info("Creating a {} exercise!".format(self.name))
 
         self.angles = config["angles_names"]
@@ -42,6 +44,7 @@ class Exercise:
         self.mins = config["mins"]
         self.maxs = config["maxs"]
         self.mids = config["mids"]
+        self.medians = config["medians"]
         # expected order of angles reaching spikes
         self.angles_order = config["angles_order"]
         # timeout for a single repetition expressed in seconds
@@ -114,15 +117,20 @@ class Exercise:
     def __check_push_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
         """
         method that checks a push movement frame.
-        angle: the value of the angle to be checked
-        index: the index corresponding to the angle in each structure contained in the class
-        _min: minimum value for that angle
-        _max: maximum value for that angle
-        mid_point: mid value for that angle
+        @param angle: the value of the angle to be checked
+        @param index: the index corresponding to the angle in each structure contained in the class
+        @param _min: minimum value for that angle
+        @param _max: maximum value for that angle
+        @param mid_point: mid value for that angle
         """
+        print("index: ", index)
+        print("checks: ", str(self.CHECKS))
         if self.CHECKS[index]:
             try:
                 self.outputs[index] = 1 if (self.CHECKS[index](angle, **kwargs) or self.outputs[index] == 1) else self.outputs[index]
+                return
+                #TODO: esci quando fa controllo - gestisco andamento dell'angolo con un altro 'angolo' in array ma con stesso indice
+
             except Exception as e:
                 log.error(str(e))
                 raise Exception(e)
@@ -193,11 +201,11 @@ class Exercise:
 
     def __check_order__(self):
         """
-        return: True se ordine corretto, False se ordine errato
+        @return: True se ordine corretto, False se ordine errato
         """
         if not self.angles_order:
             # If it is not needed to check angles order, value in the json must be set to None
-            return True
+            return True, ""
         elif len(self.angles_order) < 2:
             raise Exception("cant check order of a single element")
 
@@ -230,15 +238,19 @@ class Exercise:
         """
         ingest the frame and check each angle contained in it.
         """
+
+        kwargs['side'] = self.side
+
         if exercise_over:
             repetition_ended = True
         else:
             repetition_ended = False
-            for i in range(len(self.angles)):
+            for i, angle in enumerate(self.angles_index):
+
                 if self.push_pull[i] == "push":
-                    self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
+                    self.__check_push_frame__(frame[angle], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
                 elif self.push_pull[i] == "pull":
-                    self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
+                    self.__check_pull_frame__(frame[angle], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
 
                 repetition_ended = False
 
@@ -246,9 +258,9 @@ class Exercise:
                     repetition_ended = True
                     self.index_to_keep.append(i)
         self.time += 1
-        # log.debug("states: " + str(self.states))
-        # log.debug("outputs: " + str(self.outputs))
-        # log.debug("spikes: " + str(self.number_of_spikes))
+        log.debug("states: " + str(self.states))
+        log.debug("outputs: " + str(self.outputs))
+        log.debug("spikes: " + str(self.number_of_spikes))
         if self.countdown == 0:
             self.time_out_series += 1
             log.debug("Countdown over.")
@@ -274,7 +286,7 @@ class Exercise:
 
             if len(set(self.outputs)) == 1 and self.outputs[0] == 0:
                 self.__reset__()
-                log.info("Timeout reached: no repetition completed.")
+                log.info("No repetition completed.")
                 raise NoneRepetitionException
             else:
                 good, message = self.__check_repetition__()
