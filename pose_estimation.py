@@ -76,8 +76,8 @@ def _get_angles(joints):
         "hand_hip_knee_dx": (9, 8, 4),
         "hand_hip_foot_sx": (13, 11, 7),
         "hand_hip_foot_dx": (10, 8, 4),
-        "head_hip_feet": (1, [11, 8], [10, 13])  # unisco testa - centro dei fianchi e centro dei piedi
-        , "standing": (1, [10, 13], "axis_x")
+        "head_hip_feet": (1, [11, 8], [10, 13]),  # unisco testa - centro dei fianchi e centro dei piedi
+        "standing": (1, [10, 13], "axis_x")
         # TODO: add angle between hand-hip-foot -> useful for lateral sight e.g. burpees
     }
 
