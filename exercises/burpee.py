@@ -1,5 +1,5 @@
 from exercises.exercise import Exercise
-from utils.angles import create_angle, mid_joint
+from utils.geometry import mid_joint, create_angle, point_distance
 
 from logger import log
 
@@ -41,7 +41,7 @@ def _check_hands_(angle, **kwargs):
     sx_x, sx_y = hand_sx
     dx_x, dx_y = hand_dx
 
-    # TODO: controlli su mani
+    # TODO: controlli su mani - definire range di distanza
     if (sx_x == dx_x) and (sx_y == dx_y):
         # ovviamente estremizzata per il concetto -> necessaria definire un'area
         return True
@@ -98,43 +98,52 @@ def standing_angle(joints):
     neck = joints[1]
     feet_center = mid_joint([10, 13], joints)
     x_parallel = [0, feet_center[1]]
+    angle = create_angle(neck, feet_center, x_parallel)
+    print("angle", angle)
+    return np.abs(90 - angle) + 90
 
-    return np.abs((90 - create_angle(neck, feet_center, x_parallel)) + 90)
 
-
-def test_check_true(joints):
+def test_check_true(angle, **kwargs):
+    joints = kwargs['joints']
     print("Sono un controllo sull'angolo -  good!")
     return True
 
 
-def test_check_false(joints):
+def test_check_false(angle, **kwargs):
+    joints = kwargs['joints']
     print("Sono un controllo sull'angolo -  bad!")
     return False
 
 
+def test_check_hands(angle, **kwargs):
+    joints = kwargs['joints']
+
+    try:
+        distance = point_distance(joints[7], joints[4])
+    except:
+        distance = 99999
+    print(distance)
+
+    return (90 <= angle <= 105) and (distance <= 20)
+
+
 class Burpee(Exercise):
     def __init__(self, config, side, fps):
+        config = ex_config
         super().__init__(config, side, fps)
 
         self.CHECKS = [
             None,
-            test_check_true
+            test_check_hands
         ]
 
-        # #TODO: va letto dal json? o comunque va impostato in modo preciso (da decidere)
-        # self.CHECKS = [
-        #     None,
-        #     None,
-        #     _check_hands_,
-        #     None,
-        #     _check_on_the_ground_,
-        #     None
-        # ]
 
     def process_frame(self, frame, exercise_over=False, **kwargs):
 
-        joints = kwargs['joints']
-        # add angle needed only for burpee
-        frame = np.concatenate([frame, [standing_angle(joints)]], axis=0)
+        # TODO: farlo direttamente al livello del calcolo degli angoli? -> così più facile ma boh
 
-        super().process_frame(frame, exercise_over=False, joints=joints)
+        # add angle needed only for burpee
+        frame[-1] = np.abs(90 - frame[-1]) + 90
+        # frame = np.concatenate([frame, [standing_angle(joints)]], axis=0)
+        print(frame[-1])
+        super().process_frame(frame, exercise_over=False, **kwargs)

@@ -5,10 +5,10 @@
     "s_e": [-1, -1],
     "s_w": [-1, -1]
   },
-  "push_pull": ["push"],
+  "push_pull": ["push", "push"],
   "mins": [100, null],
   "maxs": [180, null],
-  "mids": [140, null],
+  "mids": [140, 140],
   "angles_order": null,
   "repetition_timeout": 4,
   "total_timeout": 20,

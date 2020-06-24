@@ -120,6 +120,8 @@ class Exercise:
         @param _max: maximum value for that angle
         @param mid_point: mid value for that angle
         """
+        print("index: ", index)
+        print("checks: ", str(self.CHECKS))
         if self.CHECKS[index]:
             try:
                 self.outputs[index] = 1 if (self.CHECKS[index](angle, **kwargs) or self.outputs[index] == 1) else self.outputs[index]
@@ -200,7 +202,7 @@ class Exercise:
         """
         if not self.angles_order:
             # If it is not needed to check angles order, value in the json must be set to None
-            return True
+            return True, ""
         elif len(self.angles_order) < 2:
             raise Exception("cant check order of a single element")
 
@@ -250,9 +252,9 @@ class Exercise:
                     repetition_ended = True
                     self.index_to_keep.append(i)
         self.time += 1
-        # log.debug("states: " + str(self.states))
-        # log.debug("outputs: " + str(self.outputs))
-        # log.debug("spikes: " + str(self.number_of_spikes))
+        log.debug("states: " + str(self.states))
+        log.debug("outputs: " + str(self.outputs))
+        log.debug("spikes: " + str(self.number_of_spikes))
         if self.countdown == 0:
             self.time_out_series += 1
             log.debug("Countdown over.")

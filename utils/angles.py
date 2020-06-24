@@ -1,6 +1,5 @@
 import numpy as np
 from copy import copy
-import math
 
 
 def remove_missing(series_in, inplace=False):
@@ -88,51 +87,3 @@ def preprocess_angles(series_in, indexes, mids, inplace=False):
 
     if not inplace:
         return series
-
-
-def create_angle(p1, p2, p3):
-    """
-    auxiliary method that finds the value of the angle given three points in 2D space
-    @param p1: first point
-    @param p2: second point
-    @param p3: third point
-    @return: returns the angle in degrees
-    """
-    x1, y1 = p1
-    x2, y2 = p2
-    x3, y3 = p3
-
-    p12 = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-    p13 = np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
-    p23 = np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
-
-    a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
-
-    if np.isnan(a):
-        a = 0
-
-    a_deg = math.degrees(a)  # *180/math.pi
-
-    # round to 2 decimal (more? less?)
-    return round(a_deg, 2)
-
-
-def mid_joint(i, joints):
-    """
-    given a list containing two joints, it calculates a new join between them
-    @param i: set of two indexes
-    @param joints: set of joints
-    @return: returns the generated joint
-    """
-    if type(i) == list:
-        if len(i) == 2:
-            x1, y1 = joints[i[0]]
-            x2, y2 = joints[i[1]]
-
-            x = (x1 + x2) / 2
-            y = (y1 + y2) / 2
-            return (x, y)
-        else:
-            raise Exception("Mid joint for more than 2 points not implemented yet.")
-    else:
-        return joints[i]
