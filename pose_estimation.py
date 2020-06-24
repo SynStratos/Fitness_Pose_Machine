@@ -125,12 +125,12 @@ def process_image(image, accept_missing=True, features_method=_get_angles, show_
 
     """
     this method gets an image as input and returns the extracted joints and further features from it
-    :param image: frame image
-    :param features_method: method to extract needed features - _get_angles by default
-    :param show_joints: print image with joints (debug)
-    :param accept_missing: a not recognized person frame is accepted setting all joints to None and the process
+    @param image: frame image
+    @param features_method: method to extract needed features - _get_angles by default
+    @param show_joints: print image with joints (debug)
+    @param accept_missing: a not recognized person frame is accepted setting all joints to None and the process
         continues. A proper exception is raised if False.
-    :return: joints, features (angles)
+    @return joints, features (angles)
     """
     #### sezione per indivudare i joint con il modello e mapparli - leave as it is
     multiplier = [x * boxsize / image.shape[0] for x in scale_search]

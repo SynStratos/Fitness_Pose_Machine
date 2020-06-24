@@ -48,17 +48,16 @@ def ingest_image_local(image):
 
     if len(frames) >= 3:
         # tic = time.clock()
-        preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
+        # preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
+        preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.mids)
         # debuggin
 
-        for element in preprocessed_x[1]:
-            file = open("debugging/debugging.csv", "a+")
-            file.write(str(element) + ",")
-            file.close()
-        file = open("debugging/debugging.csv", "a+")
-        file.write("\n")
-        file.close()
-        print(colored(preprocessed_x[1], 'green'))
+        # with open("debugging/debugging.csv", "w+") as file:
+        #     for element in preprocessed_x[1]:
+        #         file.write(str(element[:, exercise.angles_index]) + ",")
+        #     file.write("\n")
+        #
+        # print(colored(preprocessed_x[1][:, exercise.angles_index], 'green'))
 
         joints = joints_total[-2]
 

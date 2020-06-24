@@ -91,8 +91,8 @@ def stageT_block(x, num_p, stage, branch):
 def get_model(weights):
     """
     method that generates the pose estimation model, given the pretrained weights
-    :param weights: path to weights file
-    :return: keras model for joints recognition
+    @param  weights: path to weights file
+    @return keras model for joints recognition
     """
     input_shape = (None, None, 3)
 
@@ -127,3 +127,5 @@ def get_model(weights):
 
     model.compile(optimizer='adam', loss="sparse_categorical_crossentropy")
     return model
+
+#TODO: remove tf warnings

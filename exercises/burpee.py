@@ -3,6 +3,8 @@ from utils.angles import create_angle, mid_joint
 
 from logger import log
 
+import numpy as np
+
 ex_config = "./config/burpee_config.json"
 
 
@@ -91,23 +93,48 @@ def _check_on_the_ground_(angle, **kwargs):
     else:
         return False
 
-# def _check_at_180_(angle, **kwargs):
-#     # TODO: set more precise values
-#     if 180 <= angle <= 165:
-#         joints = kwargs['joints']
-#
+
+def standing_angle(joints):
+    neck = joints[1]
+    feet_center = mid_joint([10, 13], joints)
+    x_parallel = [0, feet_center[1]]
+
+    return np.abs((90 - create_angle(neck, feet_center, x_parallel)) + 90)
+
+
+def test_check_true(joints):
+    print("Sono un controllo sull'angolo -  good!")
+    return True
+
+
+def test_check_false(joints):
+    print("Sono un controllo sull'angolo -  bad!")
+    return False
 
 
 class Burpee(Exercise):
     def __init__(self, config, side, fps):
         super().__init__(config, side, fps)
 
-        #TODO: va letto dal json? o comunque va impostato in modo preciso (da decidere)
         self.CHECKS = [
             None,
-            None,
-            _check_hands_,
-            None,
-            _check_on_the_ground_,
-            None
+            test_check_true
         ]
+
+        # #TODO: va letto dal json? o comunque va impostato in modo preciso (da decidere)
+        # self.CHECKS = [
+        #     None,
+        #     None,
+        #     _check_hands_,
+        #     None,
+        #     _check_on_the_ground_,
+        #     None
+        # ]
+
+    def process_frame(self, frame, exercise_over=False, **kwargs):
+
+        joints = kwargs['joints']
+        # add angle needed only for burpee
+        frame = np.concatenate([frame, [standing_angle(joints)]], axis=0)
+
+        super().process_frame(frame, exercise_over=False, joints=joints)

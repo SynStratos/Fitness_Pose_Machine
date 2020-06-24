@@ -114,15 +114,18 @@ class Exercise:
     def __check_push_frame__(self, angle, index, _min, _max, mid_point, **kwargs):
         """
         method that checks a push movement frame.
-        angle: the value of the angle to be checked
-        index: the index corresponding to the angle in each structure contained in the class
-        _min: minimum value for that angle
-        _max: maximum value for that angle
-        mid_point: mid value for that angle
+        @param angle: the value of the angle to be checked
+        @param index: the index corresponding to the angle in each structure contained in the class
+        @param _min: minimum value for that angle
+        @param _max: maximum value for that angle
+        @param mid_point: mid value for that angle
         """
         if self.CHECKS[index]:
             try:
                 self.outputs[index] = 1 if (self.CHECKS[index](angle, **kwargs) or self.outputs[index] == 1) else self.outputs[index]
+                return
+                #TODO: esci quando fa controllo - gestisco andamento dell'angolo con un altro 'angolo' in array ma con stesso indice
+
             except Exception as e:
                 log.error(str(e))
                 raise Exception(e)
@@ -193,7 +196,7 @@ class Exercise:
 
     def __check_order__(self):
         """
-        return: True se ordine corretto, False se ordine errato
+        @return: True se ordine corretto, False se ordine errato
         """
         if not self.angles_order:
             # If it is not needed to check angles order, value in the json must be set to None
@@ -234,11 +237,12 @@ class Exercise:
             repetition_ended = True
         else:
             repetition_ended = False
-            for i in range(len(self.angles)):
+            for i, angle in enumerate(self.angles_index):
+
                 if self.push_pull[i] == "push":
-                    self.__check_push_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
+                    self.__check_push_frame__(frame[angle], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
                 elif self.push_pull[i] == "pull":
-                    self.__check_pull_frame__(frame[i], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
+                    self.__check_pull_frame__(frame[angle], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
 
                 repetition_ended = False
 
@@ -274,7 +278,7 @@ class Exercise:
 
             if len(set(self.outputs)) == 1 and self.outputs[0] == 0:
                 self.__reset__()
-                log.info("Timeout reached: no repetition completed.")
+                log.info("No repetition completed.")
                 raise NoneRepetitionException
             else:
                 good, message = self.__check_repetition__()

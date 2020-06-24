@@ -63,7 +63,7 @@ def remove_outliers(series_in, _mid=None, _median=None, inplace=False):
         return series
 
 
-def preprocess_angles(series_in, mids, inplace=False):
+def preprocess_angles(series_in, indexes, mids, inplace=False):
     """
     methods that applies different preprocessing methods to a set of angles
     @param series_in: starting set of angles
@@ -78,9 +78,13 @@ def preprocess_angles(series_in, mids, inplace=False):
     else:
         series = series_in
 
-    for i in range(series.shape[1]):
+    for e, i in enumerate(indexes):
         series[:,i] = remove_missing(series[:,i], inplace)
-        series[:,i] = remove_outliers(series[:,i], mids[i], inplace)
+        series[:,i] = remove_outliers(series[:,i], mids[e], inplace)
+    #
+    # for i in range(series.shape[1]):
+    #     series[:,i] = remove_missing(series[:,i], inplace)
+    #     series[:,i] = remove_outliers(series[:,i], mids[i], inplace)
 
     if not inplace:
         return series
