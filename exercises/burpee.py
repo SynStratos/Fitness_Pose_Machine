@@ -65,7 +65,7 @@ def _check_hands(angle, **kwargs):
 def test_check_floor(angle, **kwargs):
 
     return (150 <= angle <= 180) and \
-          ( (_shoulder_hand_distance_dx(kwargs['joints']) <= 18 and kwargs['side'] == "s_e") or (_shoulder_hand_distance_sx(kwargs['joints']) <= 18 and kwargs['side'] == "s_w")) # arriva anche a ~15 - 10
+          ((_shoulder_hand_distance_dx(kwargs['joints']) <= 18 and kwargs['side'] == "s_e") or (_shoulder_hand_distance_sx(kwargs['joints']) <= 18 and kwargs['side'] == "s_w")) # arriva anche a ~15 - 10
 
 
 class Burpee(Exercise):
@@ -82,9 +82,7 @@ class Burpee(Exercise):
     def process_frame(self, frame, exercise_over=False, **kwargs):
 
         # TODO: farlo direttamente al livello del calcolo degli angoli? -> così più facile ma boh
-
+        if frame is not None:
         # add angle needed only for burpee
-        frame[-1] = np.abs(90 - frame[-1]) + 90
-        # frame = np.concatenate([frame, [standing_angle(joints)]], axis=0)
-        print(frame[-1])
-        super().process_frame(frame, exercise_over=False, **kwargs)
+            frame[-1] = np.abs(90 - frame[-1]) + 90
+        super().process_frame(frame, exercise_over=exercise_over, **kwargs)
