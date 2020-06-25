@@ -252,8 +252,6 @@ class Exercise:
                 elif self.push_pull[i] == "pull":
                     self.__check_pull_frame__(frame[angle], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
 
-                repetition_ended = False
-
                 if self.outputs[i] in [1, 2] and self.states[i] == 1:
                     repetition_ended = True
                     self.index_to_keep.append(i)
