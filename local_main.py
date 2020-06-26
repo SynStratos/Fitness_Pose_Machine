@@ -50,6 +50,7 @@ def ingest_image_local(image):
         # tic = time.clock()
         # preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
         preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians)
+        print(preprocessed_x[1, exercise.angles_index])
         # debuggin
 
         # with open("debugging/debugging.csv", "w+") as file:
@@ -134,8 +135,8 @@ if __name__ == '__main__':
     global_config = os.path.join(os.getcwd(), "config/global_config.json")
 
     # video_file = os.path.join(os.getcwd(), "test_videos/burpee_2.mp4")
-    video_file = os.path.join(os.getcwd(), "test_videos/burpee_1.mp4")
-    # video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
+    # video_file = os.path.join(os.getcwd(), "test_videos/burpee_1.mp4")
+    video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
 
     instantiate_model()
 
@@ -143,7 +144,8 @@ if __name__ == '__main__':
     with open(global_config) as f:
         global_config = json.load(f)
 
-    # exercise = Thruster(config=ex_config, side='s_e', fps=global_config['fps'])
-    exercise = Burpee(config=None, side='s_e', fps=global_config['fps'])
+    exercise = Thruster(config=None, side='s_e', fps=global_config['fps'])
+    print(exercise.angles_index)
+    # exercise = Burpee(config=None, side='s_e', fps=global_config['fps'])
 
-    ingest_video_local(exercise, video_file, number_of_frames=80, fps=global_config['fps'], h=global_config['height'])
+    ingest_video_local(exercise, video_file, number_of_frames=80000, fps=global_config['fps'], h=global_config['height'])

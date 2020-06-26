@@ -90,9 +90,9 @@ class Exercise:
         resets all the counters and tracking arrays at the end of a repetition (good, bad or timeout)
         """
         log.debug("Resetting exercise variables after a single repetition.")
-        self.states = [0] * self.n_angles
-        for i in self.index_to_keep:
-            self.states[i] = 1
+        # self.states = [0] * self.n_angles
+        # for i in self.index_to_keep:
+        #     self.states[i] = 1
         self.index_to_keep = []
         self.outputs = [0] * self.n_angles
         self.timestamps = [0] * self.n_angles
@@ -254,7 +254,7 @@ class Exercise:
 
                 if self.outputs[i] in [1, 2] and self.states[i] == 1:
                     repetition_ended = True
-                    self.index_to_keep.append(i)
+                    self.index_to_keep.append(i) #TODO: no reset qui
         self.time += 1
         log.debug("states: " + str(self.states))
         log.debug("outputs: " + str(self.outputs))
