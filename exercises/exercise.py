@@ -123,8 +123,6 @@ class Exercise:
         @param _max: maximum value for that angle
         @param mid_point: mid value for that angle
         """
-        print("index: ", index)
-        print("checks: ", str(self.CHECKS))
         if self.CHECKS[index]:
             try:
                 self.outputs[index] = 1 if (self.CHECKS[index](angle, **kwargs) or self.outputs[index] == 1) else self.outputs[index]

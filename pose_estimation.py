@@ -122,10 +122,11 @@ def visualize_person(canvas, person):
     plt.show()
 
 
-def process_image(image, accept_missing=True, features_method=_get_angles, show_joints=False):
+def process_image(image, accept_missing=True, no_features=False, features_method=_get_angles, show_joints=False):
 
     """
     this method gets an image as input and returns the extracted joints and further features from it
+    @param no_features: define if it is not needed to generate additional features but only person joints
     @param image: frame image
     @param features_method: method to extract needed features - _get_angles by default
     @param show_joints: print image with joints (debug)
@@ -325,5 +326,6 @@ def process_image(image, accept_missing=True, features_method=_get_angles, show_
     # joints = None
     if show_joints:
         visualize_person(image, person)
-
+    if no_features:
+        return person, None
     return person, features_method(person)
