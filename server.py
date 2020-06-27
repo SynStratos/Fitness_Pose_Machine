@@ -16,6 +16,7 @@ import time
 from PIL import Image
 import cv2
 import numpy as np
+import datetime
 
 # import custom
 from logger import set_logger, log
@@ -53,6 +54,11 @@ video_processing_dir = config['video_processing_dir']
 fps = config['fps']
 height_resize_video = config['height']
 width_resize_video = config['width']
+
+# CSV DEBUGGING
+flag_debug_csv = True
+file_debug_dir = "debugging/"  # nome del file di debugging
+file_debug = None  # file di debugging
 
 # MODULE LEVEL PLACEHOLDERS
 orientation = None
@@ -92,6 +98,14 @@ def ingest_image(image, exercise_over=False):
         if len(frames) >= 3:
             preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians)
             joints = joints_total[-2]
+
+            # debugging: TODO remove in production -> flag_debug_csv = False
+            # file_debug defined in -> ingest_video()
+            if flag_debug_csv:
+                with open(file_debug, "a+") as file:
+                    for element in preprocessed_x[1, exercise.angles_index]:
+                        file.write(str(element) + ",")
+                    file.write("\n")
 
             try:
                 # exceptions will be catched from super method calling this function
@@ -298,6 +312,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         global exercise
         global joints_total
         global number_frames
+
+        # useful for debugging
+        global file_debug_dir
+        global file_debug
+        file_debug = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
 
         # flag break
         flag_break = False
