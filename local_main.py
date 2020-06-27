@@ -53,12 +53,10 @@ def ingest_image_local(image):
         print(preprocessed_x[1, exercise.angles_index])
         # debuggin
 
-        # with open("debugging/debugging.csv", "w+") as file:
-        #     for element in preprocessed_x[1]:
-        #         file.write(str(element[:, exercise.angles_index]) + ",")
-        #     file.write("\n")
-        #
-        # print(colored(preprocessed_x[1][:, exercise.angles_index], 'green'))
+        with open("debugging/debugging.csv", "a+") as file:
+            for element in preprocessed_x[1, exercise.angles_index]:
+                file.write(str(element) + ",")
+            file.write("\n")
 
         joints = joints_total[-2]
 

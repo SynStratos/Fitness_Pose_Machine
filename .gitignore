@@ -1,6 +1,6 @@
 #Log files
 *.log
-debugging
+#debugging
 backup
 
 #videos
