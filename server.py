@@ -11,13 +11,9 @@ import json
 import os
 from termcolor import colored
 from copy import copy
-from datetime import datetime
 import base64
 import time
-
 from PIL import Image
-
-# import modello
 import cv2
 import numpy as np
 
@@ -26,29 +22,25 @@ from logger import set_logger, log
 from exceptions import *
 from pose_estimation import process_image, instantiate_model
 from utils.angles import preprocess_angles
+from utils.pose import get_orientation
 
-# improt exercises
+# import exercises
 from exercises.burpee import Burpee
 from exercises.thruster import Thruster
 
-from utils.pose import get_orientation
+##############
+##############
+##############
 
-##############
-##############
-##############
-##############
-##############
-##############
-##############
-## CONFIGURATION
+# CONFIGURATION
 
-# available exercises dictionary
+## available exercises dictionary
 EXERCISE = {
     'burpee': Burpee,
     'thruster': Thruster
 }
 
-# load config file
+## load config file
 server_config_file = os.path.join(os.getcwd(), "config/server_config.json")
 with open(server_config_file) as f:
     config = json.load(f)
@@ -62,16 +54,24 @@ fps = config['fps']
 height_resize_video = config['height']
 width_resize_video = config['width']
 
-# module level placeholders
+# MODULE LEVEL PLACEHOLDERS
 orientation = None
 exercise = None
 frames = []
 joints_total = []
 exercise_name = None
 
-# module level counters
-number_frames = 1  # contatore per mostrare frame elaborati
+# MODULE LEVEL COUNTERS
+## current processed frame number
+number_frames = 1
+## counters for repetitions
+reps_total = 0
+reps_ok = 0
+reps_wrong = 0
+##
 
+
+####################################################################
 
 def ingest_image(image, exercise_over=False):
     global frames
@@ -125,26 +125,26 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
     def on_message(self, message):
         """
         parse any message received from the client, identifies the type of method that will be run
+
+        different messages IN <-> different computation
+        type of message:
+        "video_upload" -> incoming a video to process
+        "type_exercise" -> incoming a video to process
+
+        different messages OUT <-> different computation
+        type of message:
+        "console" -> message that client have to show in console.log
+        "video_processing_updates_title" -> update the client when processing the video -> changing the popup title
+        "video_processing_updates_text" -> update the client when processing the video -> changing the popup text
+        "video_processing_terminated" -> update the client that the processing is ended and send the results
+
         @param message: message received from the client
         @return:
         """
-        global exercise
         global exercise_name
 
         # read message arrived -> always in json format
         message_ = json.loads(message)
-
-        # different messages IN <-> different computation
-        # type of message:
-        # "video_upload" -> incoming a video to process
-        # "type_exercise" -> incoming a video to process
-
-        # different messages OUT <-> different computation
-        # type of message:
-        # "console" -> message that client have to show in console.log
-        # "video_processing_updates_title" -> update the client when processing the video -> changing the popup title
-        # "video_processing_updates_text" -> update the client when processing the video -> changing the popup text
-        # "video_processing_terminated" -> update the client that the processing is ended and send the results
 
         if message_['type'] == "video_upload":
             # message from the client (video) passed to function "ingest_video()"
@@ -160,16 +160,23 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         elif message_['type'] == "detection_initial_position":
             # detect initial position
             print(colored('> Message to detect initial position', 'red'))
-            self.detect_initial_position(message_['data'])
+            self.__detect_initial_position__(message_['data'])
 
         elif message_['type'] == "detection_webcam_exercise":
-            # detect initial position
+            # manage the beginning of a webcam exercise
             print(colored('> Message to process exercise from webcam', 'red'))
-            # TODO: function to manage frame results with webcam
-            pass
-            # self.detect_initial_position(message_['data'])
+            self.ingest_webcam_stream(message_['data'])
 
-    def detect_initial_position(self, image_data_url):
+        elif message_['type'] == "stop_webcam_exercise":
+            print(colored('> Message to stop exercise processing from webcam', 'red'))
+            # manage a stop signal sent by the user (like a 'stop' button) to manually interrupt the exercise and check the previous frame
+            self.ingest_webcam_stream(message_['data'], last_one=True)
+
+            # TODO: invio messaggio di esercizio stoppato correttamente al fine del processing
+
+    # -------------------------------------------------------------------------------------------------------- #
+
+    def __detect_initial_position__(self, image_data_url):
         """
         method that ingests a single frame to detect the initial position
         @param image_data_url:
@@ -209,29 +216,88 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         except Exception:
             pass
 
+    def ingest_webcam_stream(self, image_data_url, last_one=False):
+        """
+
+        @param last_one:
+        @param image_data_url:
+        @return:
+        """
+        global reps_total, reps_ok, reps_wrong
+
+        global frames, joints_total, number_frames
+
+        if not last_one:
+            frame = cv2.cvtColor(np.array(Image.open(BytesIO(base64.b64decode(image_data_url.split(",")[1])))), cv2.COLOR_RGB2BGR)
+        else:
+            frame = None
+        _ = self.__try_catch_images__(frame, last_one=last_one)
+
+    def __try_catch_images__(self, image, last_one=False):
+        """
+
+        @param image:
+        @param last_one: process last empty frame to check previous frame and stop execution - triggered at the end of a local video or by a 'stop' button from the the webcam interface
+        @return:
+        """
+        global reps_total, reps_ok, reps_wrong
+        # ingest image
+
+        flag_break = False
+
+        try:
+            ingest_image(image, exercise_over=last_one)
+        except GoodRepetitionException:
+            # found a good repetition
+            reps_total += 1
+            reps_ok += 1
+            print(colored("> Reps OK", 'green'))
+            [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition OK!'}) for client in
+             self.connections]
+            [client.write_message({'type': 'console', 'text': 'Repetition OK!'}) for client in self.connections]
+        except CompleteExerciseException:
+            # exercise completed according to fixed reps
+            print(colored("> Exercise ended. Fixed reps", 'green'))
+            [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise ended. Fixed reps'}) for
+             client in self.connections]
+            [client.write_message({'type': 'console', 'text': 'Exercise ended. Fixed reps'}) for client in
+             self.connections]
+            # TODO: from client side, if webcam excercise, stream must be interrupted
+            flag_break = True
+        except NoneRepetitionException:
+            # exercise timeout without repetitions
+            print(colored("> Repetition time exceed", 'green'))
+            [client.write_message({'type': 'console', 'text': 'Repetition time exceed'}) for client in self.connections]
+        except BadRepetitionException as bre:
+            # found wrong repetition + message
+            reps_total += 1
+            reps_wrong += 1
+            message = str(bre)
+            print(colored("> Reps BAD: " + message, 'green'))
+            [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition WRONG!: ' + message})
+             for client in self.connections]
+            [client.write_message({'type': 'console', 'text': 'Repetition WRONG!: ' + message}) for client in
+             self.connections]
+        except TimeoutError:
+            # exercise in timeout (maximum number of waiting seconds for the whole exercise exceeded)
+            print(colored("> Exercise Timeout", 'green'))
+            [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise Timeout'}) for client in
+             self.connections]
+            [client.write_message({'type': 'console', 'text': 'Exercise Timeout'}) for client in self.connections]
+            # TODO: from client side, if webcam excercise, stream must be interrupted
+            flag_break = True
+
+        return flag_break
+
     # this function ingest video arrived from client
     def ingest_video(self, video):
         global orientation
-
-        global video_processing_dir
-        global width_resize_video
-        global height_resize_video
 
         # useful to reset system
         global frames
         global exercise
         global joints_total
         global number_frames
-
-        # useful for debugging
-        global file_debug_dir
-        global file_debug
-        file_debug = file_debug_dir + str(datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
-
-        # counters for repetitions
-        reps_total = 0
-        reps_ok = 0
-        reps_wrong = 0
 
         # flag break
         flag_break = False
@@ -304,110 +370,45 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         except NotFoundPersonException:
             print(colored("> Can't detect enough body joints.", 'red'))
             [client.write_message({'type': 'initial_position_error',
-                                   'error': "Can't detect enough body joints. Try moving slowly."})
+                                   'error': "Can't detect enough body joints."})
              for client in self.connections]
         except Exception:
-            pass
+            print(colored("> Unexpected error.", 'red'))
+            [client.write_message({'type': 'error',
+                                   'text': "Unexpected error occured during video parsing."})
+             for client in self.connections]
 
         # start processing video
         [client.write_message({'type': 'video_processing_updates_title', 'update': 'Processing video...'}) for
          client in
          self.connections]
         # counter to update client
-        count = 1
         while success:
-            print(colored("> Processing frames: "+str(count), 'yellow'))
+            print(colored("> Processing frames: "+str(number_frames), 'yellow'))
             [client.write_message(
-                {'type': 'video_processing_updates_text', 'update': 'Processing frame: ' + str(count)}) for client in
+                {'type': 'video_processing_updates_text', 'update': 'Processing frame: ' + str(number_frames)}) for client in
              self.connections]
-            [client.write_message({'type': 'console', 'text': 'Processing frame: ' + str(count)}) for client in
+            [client.write_message({'type': 'console', 'text': 'Processing frame: ' + str(number_frames)}) for client in
              self.connections]
 
             # get images resized
             image = cv2.resize(image, (w_video, h_video))
 
-            # ingest image
-            try:
-                ingest_image(image)
-            except GoodRepetitionException:
-                # found a good repetition
-                reps_total += 1
-                reps_ok += 1
-                print(colored("> Reps OK", 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition OK!'}) for client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Repetition OK!'}) for client in self.connections]
-            except CompleteExerciseException:
-                # exercise completed according to fixed reps
-                print(colored("> Exercise ended. Fixed reps", 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise ended. Fixed reps'}) for client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Exercise ended. Fixed reps'}) for client in self.connections]
-                flag_break = True
-                break
-            except NoneRepetitionException:
-                # exercise timeout without repetitions
-                print(colored("> Repetition time exceed", 'green'))
-                [client.write_message({'type': 'console', 'text': 'Repetition time exceed'}) for client in self.connections]
-            except BadRepetitionException as bre:
-                # found wrong repetition + message
-                reps_total += 1
-                reps_wrong += 1
-                message = str(bre)
-                print(colored("> Reps BAD: " + message, 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition WRONG!: ' + message}) for client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Repetition WRONG!: ' + message}) for client in self.connections]
-            except TimeoutError:
-                # exercise in timeout
-                print(colored("> Exercise Timeout", 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise Timeout'}) for client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Exercise Timeout'}) for client in self.connections]
-                flag_break = True
+            # ingest images
+            flag_break = flag_break or self.__try_catch_images__(image)
+
+            # stop processing for overall timeout or total number of repetitions reached
+            if flag_break:
                 break
 
-            count += 1
+            number_frames += 1
             # skip next frame according to fps
-            capture.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 / fps))
+            capture.set(cv2.CAP_PROP_POS_MSEC, (number_frames * 1000 / fps))
             success, image = capture.read()
 
         if not flag_break:
             # processing last repetition
-            try:
-                ingest_image(None, exercise_over=True)
-            except GoodRepetitionException:
-                # found a good repetition
-                reps_total += 1
-                reps_ok += 1
-                print(colored("> Reps OK", 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition OK!'}) for client
-                 in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Repetition OK!'}) for client in self.connections]
-            except CompleteExerciseException:
-                # exercise completed according to fixed reps
-                print(colored("> Exercise ended. Fixed reps", 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise ended. Fixed reps'})
-                 for client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Exercise ended. Fixed reps'}) for client in
-                 self.connections]
-            except NoneRepetitionException:
-                # exercise timeout without repetitions
-                print(colored("> Repetition time exceed", 'green'))
-                [client.write_message({'type': 'console', 'text': 'Repetition time exceed'}) for client in
-                 self.connections]
-            except BadRepetitionException as bre:
-                # found wrong repetition + message
-                reps_total += 1
-                reps_wrong += 1
-                message = str(bre)
-                print(colored("> Reps BAD: " + message, 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition WRONG!: ' + message}) for
-                 client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Repetition WRONG!: ' + message}) for client in self.connections]
-            except TimeoutError:
-                # exercise in timeout
-                print(colored("> Exercise Timeout", 'green'))
-                [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise Timeout'}) for
-                 client in self.connections]
-                [client.write_message({'type': 'console', 'text': 'Exercise Timeout'}) for client in self.connections]
-
+            _ = self.__try_catch_images__(image, last_one=True)
 
         # update client -> video terminated
         [client.write_message({'type': 'video_processing_terminated', 'reps_total': reps_total, 'reps_ok': reps_ok, 'reps_wrong': reps_wrong}) for client in self.connections]
@@ -419,8 +420,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         [client.write_message({'type': 'console', 'text': "Removing video file on server"}) for client in self.connections]
         capture.release()
         os.remove(file_name)
-
-    # this function ingest single image and process the repetitions
 
 
 def make_app():
