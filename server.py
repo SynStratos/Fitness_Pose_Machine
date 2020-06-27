@@ -59,6 +59,7 @@ width_resize_video = config['width']
 flag_debug_csv = True
 file_debug_dir = "debugging/"  # nome del file di debugging
 file_debug = None  # file di debugging
+file_debug_rep = None
 
 # MODULE LEVEL PLACEHOLDERS
 orientation = None
@@ -265,12 +266,18 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             # found a good repetition
             reps_total += 1
             reps_ok += 1
+            if flag_debug_csv:
+                with open(file_debug_rep, "a+") as file:
+                    file.write(str(number_frames) + ",ok,")
+                    file.write("\n")
+
             print(colored("> Reps OK", 'green'))
             [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition OK!'}) for client in
              self.connections]
             [client.write_message({'type': 'console', 'text': 'Repetition OK!'}) for client in self.connections]
         except CompleteExerciseException:
             # exercise completed according to fixed reps
+
             print(colored("> Exercise ended. Fixed reps", 'green'))
             [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise ended. Fixed reps'}) for
              client in self.connections]
@@ -279,14 +286,19 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             # TODO: from client side, if webcam excercise, stream must be interrupted
             flag_break = True
         except NoneRepetitionException:
-            # exercise timeout without repetitions
-            print(colored("> Repetition time exceed", 'green'))
-            [client.write_message({'type': 'console', 'text': 'Repetition time exceed'}) for client in self.connections]
+            if not last_one:
+                # exercise timeout without repetitions
+                print(colored("> Repetition time exceed", 'green'))
+                [client.write_message({'type': 'console', 'text': 'Repetition time exceed'}) for client in self.connections]
         except BadRepetitionException as bre:
             # found wrong repetition + message
             reps_total += 1
             reps_wrong += 1
             message = str(bre)
+            if flag_debug_csv:
+                with open(file_debug_rep, "a+") as file:
+                    file.write(str(number_frames) + ",ko,")
+                    file.write("\n")
             print(colored("> Reps BAD: " + message, 'green'))
             [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition WRONG!: ' + message})
              for client in self.connections]
@@ -294,6 +306,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
              self.connections]
         except TimeoutError:
             # exercise in timeout (maximum number of waiting seconds for the whole exercise exceeded)
+            if flag_debug_csv:
+                with open(file_debug_rep, "a+") as file:
+                    file.write(str(number_frames) + ",timeout,")
+                    file.write("\n")
             print(colored("> Exercise Timeout", 'green'))
             [client.write_message({'type': 'video_processing_updates_text', 'update': 'Exercise Timeout'}) for client in
              self.connections]
@@ -313,10 +329,17 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         global joints_total
         global number_frames
 
+        global reps_ok
+        global reps_wrong
+        global reps_total
+
         # useful for debugging
         global file_debug_dir
         global file_debug
+        global file_debug_rep
+
         file_debug = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
+        file_debug_rep = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + "_reps.csv"
 
         # flag break
         flag_break = False
@@ -329,6 +352,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         frames = []
         joints_total = []
         number_frames = 1
+        reps_ok = 0
+        reps_wrong = 0
+        reps_total = 0
 
         # saving file
         # update client
@@ -373,7 +399,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         try:
             joints, _ = process_image(image, accept_missing=False, no_features=True)
             orientation = get_orientation(joints[13], joints[10])
-            print(colored("> Person detected correctly.", 'green'))
+            print(colored("> Person detected correctly: " + str(orientation), 'green'))
             [client.write_message({'type': 'initial_position_detected',
                                    'text': "Person detected correctly in video.",
                                    "orientation": "south-east" if orientation == "s_e" else "south-west"})
@@ -438,6 +464,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         print(colored("> Removing video file from server", 'red'))
         [client.write_message({'type': 'console', 'text': "Removing video file on server"}) for client in self.connections]
         capture.release()
+        capture.release()
         os.remove(file_name)
 
 
@@ -456,7 +483,10 @@ if __name__ == "__main__":
     set_logger()
     # set up web application
     app = make_app()
-    app.listen(5000)
+    app.listen(5000, ssl_options={
+        "certfile": os.path.join("certificates", "server.crt"),
+        "keyfile": os.path.join("certificates", "server.key"),
+    })
 
     # instantiate tf model before running the inference to prevent slow loading times
     instantiate_model()
