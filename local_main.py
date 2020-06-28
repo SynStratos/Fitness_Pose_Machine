@@ -79,7 +79,7 @@ def ingest_image_local(image):
         except TimeoutError:
             print(colored("Timeout", 'red'))
         finally:
-            frames = copy(frames[-2:])
+            frames = copy(list(preprocessed_x[-2:]))
             joints_total = copy(joints_total[-2:])
 
 

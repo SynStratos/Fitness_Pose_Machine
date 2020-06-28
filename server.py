@@ -112,7 +112,7 @@ def ingest_image(image, exercise_over=False):
                 # exceptions will be catched from super method calling this function
                 exercise.process_frame(preprocessed_x[-2], exercise_over,joints=joints)
             finally:
-                frames = copy(frames[-2:])
+                frames = copy(list(preprocessed_x[-2:]))
                 joints_total = copy(joints_total[-2:])
 
     # stop signal -> process only last frames
