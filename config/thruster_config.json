@@ -1,19 +1,19 @@
 {
   "exercise_name": "Thruster",
-  "angles_names": ["elbow", "shoulder", "hip", "knee"],
+  "angles_names": ["elbow", "shoulder", "knee"],
   "angles_to_check": {
-    "s_e": [0,2,6,8],
-    "s_w": [1,3,7,9]
+    "s_e": [0,2,8],
+    "s_w": [1,3,9]
   },
-  "push_pull": ["push", "push", "pull", "pull"],
-  "mins": [50, 65, 160, 160],
-  "maxs": [168, 169, 67, 51],
-  "mids": [110, 120, 115, 105],
-  "medians": [110, 120, 115, 105],
-  "angles_order": [[2,3], [0,1]],
+  "push_pull": ["push", "push", "pull"],
+  "mins": [50, 65, 160],
+  "maxs": [168, 169, 51],
+  "mids": [110, 120, 105],
+  "medians": [110, 120, 105],
+  "angles_order": [[3], [0,1]],
   "repetition_timeout": 10,
   "total_timeout": 20,
   "n_repetition": 10,
-  "tolerance": [12, 12, 20, 16],
-  "number_of_spikes": [1, 1, 1, 1]
+  "tolerance": [12, 12, 16],
+  "number_of_spikes": [1, 1, 1]
 }
