@@ -9,7 +9,7 @@
   "mins": [100, null, null],
   "maxs": [180, null, null],
   "mids": [140, 140, 140],
-  "medians": [140, 140, 140],
+  "medians": [140, null, null],
   "angles_order": null,
   "repetition_timeout": 10,
   "total_timeout": 20,
