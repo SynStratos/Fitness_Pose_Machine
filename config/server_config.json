@@ -1,0 +1,6 @@
+{
+  "video_processing_dir": "video_processing",
+  "fps": 10,
+  "height": 240,
+  "width": 240
+}

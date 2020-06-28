@@ -1,6 +1,6 @@
 import numpy as np
 from copy import copy
-
+import pandas as pd
 
 def remove_missing(series_in, inplace=False):
     """
@@ -77,7 +77,7 @@ def preprocess_angles(series_in, indexes, mids, inplace=False):
     else:
         series = series_in
 
-    for e, i in enumerate(indexes):
+    for e, i in enumerate(pd.Series(indexes).drop_duplicates().tolist()):
         series[:,i] = remove_missing(series[:,i], inplace)
         series[:,i] = remove_outliers(series[:,i], mids[e], inplace)
     #

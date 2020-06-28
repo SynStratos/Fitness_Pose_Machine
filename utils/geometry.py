@@ -46,6 +46,7 @@ def create_angle(p1, p2, p3, decimal=2):
     @param p3: third point or a reference axis ["axis_x", "axis_y"]
     @return: returns the angle in degrees
     """
+    flag = 'axis' in p3
 
     x2, y2 = p2
 
@@ -69,5 +70,8 @@ def create_angle(p1, p2, p3, decimal=2):
     except:
         log.debug("Exception for angle")
         a_deg = 0
+    finally:
+        if flag:
+            a_deg = np.abs(90 - a_deg) + 90
 
     return round(a_deg, decimal)

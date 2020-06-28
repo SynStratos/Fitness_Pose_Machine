@@ -4,8 +4,8 @@ import os
 from termcolor import colored
 import numpy as np
 from copy import copy
+import datetime
 
-from exercises.burpee import Burpee
 from logger import set_logger, log
 from exceptions import *
 from pose_estimation import process_image, instantiate_model
@@ -13,6 +13,12 @@ from utils.angles import preprocess_angles
 from utils.image import *
 
 from exercises.thruster import Thruster
+from exercises.burpee import Burpee
+
+# CSV DEBUGGING
+flag_debug_csv = True
+file_debug_dir = "debugging/"  # nome del file di debugging
+file_debug = None  # file di debugging
 
 # vars globali
 exercise = None
@@ -35,7 +41,6 @@ def ingest_image_local(image):
     global joints_total
 
     # aggiorno il client
-    print(colored(len(frames), 'red'))
     print(colored("Frame processing: " + str(number_frames), 'yellow'))
     number_frames += 1
 
@@ -47,18 +52,15 @@ def ingest_image_local(image):
     frames.append(processed_frame)
 
     if len(frames) >= 3:
-        # tic = time.clock()
-        # preprocessed_x = preprocess_angles(np.array(frames[-3:])[:, exercise.angles_index], mids=exercise.mids)
         preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians)
         print(preprocessed_x[1, exercise.angles_index])
-        # debuggin
 
-        # with open("debugging/debugging.csv", "w+") as file:
-        #     for element in preprocessed_x[1]:
-        #         file.write(str(element[:, exercise.angles_index]) + ",")
-        #     file.write("\n")
-        #
-        # print(colored(preprocessed_x[1][:, exercise.angles_index], 'green'))
+        # debugging: TODO remove in production -> flag_debug_csv = False
+        if flag_debug_csv:
+            with open(file_debug, "a+") as file:
+                for element in preprocessed_x[1, exercise.angles_index]:
+                    file.write(str(element) + ",")
+                file.write("\n")
 
         joints = joints_total[-2]
 
@@ -77,7 +79,7 @@ def ingest_image_local(image):
         except TimeoutError:
             print(colored("Timeout", 'red'))
         finally:
-            frames = copy(frames[-2:])
+            frames = copy(list(preprocessed_x[-2:]))
             joints_total = copy(joints_total[-2:])
 
 
@@ -130,22 +132,24 @@ def ingest_video_local(exercise, path, number_of_frames, fps, w=None, h=None, ro
 if __name__ == '__main__':
     # istanzio tutto ciò che serve una volta sola
     set_logger()
-    # ex_config = os.path.join(os.getcwd(), "config/thruster_config.json")
-    # ex_config = os.path.join(os.getcwd(), "config/burpee_config.json") #TODO: port to exercise class
     global_config = os.path.join(os.getcwd(), "config/global_config.json")
 
+    # useful for debugging
+    file_debug = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
+
+    # load videos
     # video_file = os.path.join(os.getcwd(), "test_videos/burpee_2.mp4")
     # video_file = os.path.join(os.getcwd(), "test_videos/burpee_1.mp4")
     video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
 
+    # instance model
     instantiate_model()
 
     # TODO: get side
     with open(global_config) as f:
         global_config = json.load(f)
 
-    exercise = Thruster(config=None, side='s_e', fps=global_config['fps'])
-    print(exercise.angles_index)
     # exercise = Burpee(config=None, side='s_e', fps=global_config['fps'])
+    exercise = Thruster(config=None, side='s_e', fps=global_config['fps'])
 
     ingest_video_local(exercise, video_file, number_of_frames=80000, fps=global_config['fps'], h=global_config['height'])

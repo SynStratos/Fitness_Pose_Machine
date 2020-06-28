@@ -13,7 +13,8 @@ class Exercise:
         'start',
         'rep_going',
         'top',
-        'over_top'
+        'over_top',
+        'max_mid'
     ]
 
     OUTPUTS = [
@@ -57,6 +58,7 @@ class Exercise:
         self.tolerance = config["tolerance"]
         # number of times each angle has to reach the threshold for the repetition to be good
         self.number_of_spikes = copy(config["number_of_spikes"])
+        self.min_spikes = copy(config["number_of_spikes"])
         self.n_angles = len(self.angles_index)
         # set of further check methods to be applied to some specific angles (works on indexes)
         self.CHECKS = [None] * self.n_angles
@@ -83,7 +85,7 @@ class Exercise:
         self.num_bad_reps = 0
         self.time_out_series = 0
 
-        self.index_to_keep = []
+        # self.index_to_keep = []
 
     def __reset__(self):
         """
@@ -98,7 +100,7 @@ class Exercise:
         self.timestamps = [0] * self.n_angles
 
         self.number_of_spikes = copy(self.config["number_of_spikes"])
-
+        self.min_spikes = copy(self.config["number_of_spikes"])
         # self.n_timeout = int(self.tot_timeout / self.rep_timeout)
         self.countdown = int(self.fps * self.rep_timeout)
 
@@ -123,8 +125,6 @@ class Exercise:
         @param _max: maximum value for that angle
         @param mid_point: mid value for that angle
         """
-        print("index: ", index)
-        print("checks: ", str(self.CHECKS))
         if self.CHECKS[index]:
             try:
                 self.outputs[index] = 1 if (self.CHECKS[index](angle, **kwargs) or self.outputs[index] == 1) else self.outputs[index]
@@ -139,65 +139,84 @@ class Exercise:
 
         # state 'none'
         if self.states[index] == 0:
-
             if angle >= _min:
                 self.states[index] = 1
+                self.min_spikes[index] -= 1
 
         # state 'start'
         elif self.states[index] == 1:
-
             if angle < _min:
                 self.states[index] = 0
             elif angle >= mid_point:
                 self.states[index] = 2
             elif (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
                 # goes directly to top value, maybe skipped frames
+                self.number_of_spikes[index] -= 1
+                if self.number_of_spikes[index] == 0:
+                    # expected number of times reached -> rep is ok
+                    if self.outputs[index] == 0:
+                        # check that previous spike was not failed
+                        self.outputs[index] = 1
+                elif self.number_of_spikes[index] < 0:
+                    # expected number of times exceeded -> rep is bad
+                    self.outputs[index] = 2
                 self.states[index] = 3
 
         # state 'rep_going'
         elif self.states[index] == 2:
             # goes to 'top'
             if (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
+                self.number_of_spikes[index] -= 1
+                if self.number_of_spikes[index] == 0:
+                    # expected number of times reached -> rep is ok
+                    if self.outputs[index] == 0:
+                        # check that previous spike was not failed
+                        self.outputs[index] = 1
+                elif self.number_of_spikes[index] < 0:
+                    # expected number of times exceeded -> rep is bad
+                    self.outputs[index] = 2
                 self.states[index] = 3
             # goes back to 'min' without completing the repetition
+            elif angle < mid_point:
+                self.states[index] = 1
+                if self.outputs[index] == 0:
+                    self.outputs[index] = 2
             elif angle <= _min:
-                self.timestamps[index] = self.time
-
-                self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] == 0:
-                    self.outputs[index] = 2  # set to bad repetition
-
                 self.states[index] = 0
-            # goes directly over the top value, maybe skipped frames
+                if self.outputs[index] == 0:
+                    self.outputs[index] = 2
             elif angle > (_max + self.tolerance[index]):
-                self.timestamps[index] = self.time
                 self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] == 0:
-                    self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 4
+                self.outputs[index] = 2
 
         # state 'top'
         elif self.states[index] == 3:
             # goes back to 'min'
-            if angle <= _min:
-                self.timestamps[index] = self.time
-                self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] == 0:
-                    self.outputs[index] = 1  # repetition correctly completed
+            ### CHECK IF REPETITION ANGLE REACHED ITS MAXIMUM AND IT IS RETURNING TO INITIAL POSITION
+            # between mid and max
+            if mid_point < angle < _max - self.tolerance[index]: #_min:
+                self.states[index] = 2
+            # under min value
+            elif angle <= _min:
                 self.states[index] = 0
+            # between mid and min
+            elif angle <= mid_point:
+                self.states[index] = 1
             # goes over the top value
             elif angle > (_max + self.tolerance[index]):
-                self.timestamps[index] = self.time
-                self.number_of_spikes[index] -= 1
-                if self.number_of_spikes[index] == 0:
-                    self.outputs[index] = 2  # set to bad repetition
+                self.outputs[index] = 2  # set to bad repetition
                 self.states[index] = 4
 
         # state 'over_top'
         elif self.states[index] == 4:
             # goes back to min
+            if (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
+                self.states[index] = 3
             if angle <= _min:
                 self.states[index] = 0
+            if angle <= mid_point:
+                self.states[index] = 1
 
     def __check_order__(self):
         """
@@ -252,13 +271,35 @@ class Exercise:
                 elif self.push_pull[i] == "pull":
                     self.__check_pull_frame__(frame[angle], index=i, _min=self.mins[i], _max=self.maxs[i], mid_point=self.mids[i], **kwargs)
 
-                if self.outputs[i] in [1, 2] and self.states[i] == 1:
-                    repetition_ended = True
-                    self.index_to_keep.append(i) #TODO: no reset qui
+                # repetition_ended = True
+                # for out in self.outputs:
+                #     repetition_ended = repetition_ended and out in [1, 2]
+                #
+                # if not repetition_ended and self.outputs[i] in [1, 2] and self.states[i] == 2:
+                #     repetition_ended = True
+
+            # controllo se tutti gli angoli sono arrivati allo status di rep ok o rep bad
+            # repetition_ended = True
+            # for out in self.outputs:
+            #     repetition_ended = repetition_ended and out in [1, 2]
+
+            if not repetition_ended:
+                for j in self.min_spikes:
+                    repetition_ended = repetition_ended or j == -1
+
+            # # se non sono arrivato a tutte rep fatte controllo che almeno una segnata come rep completa stia ricominciando la salita e abbia raggiunto il punto di mid
+            # if not repetition_ended:
+            #     for j, out in enumerate(self.outputs):
+            #         repetition_ended = repetition_ended or (out in [1, 2] and self.states[j] == 2)
+            #         # self.index_to_keep.append(i)
+            #
+
+
         self.time += 1
         log.debug("states: " + str(self.states))
         log.debug("outputs: " + str(self.outputs))
         log.debug("spikes: " + str(self.number_of_spikes))
+        log.debug("min_spikes: " + str(self.min_spikes))
         if self.countdown == 0:
             self.time_out_series += 1
             log.debug("Countdown over.")

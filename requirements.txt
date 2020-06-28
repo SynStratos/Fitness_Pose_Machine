@@ -2,9 +2,8 @@ tensorflow-gpu
 opencv-python
 numpy
 pandas
-flask
-eventlet
-flask_socketio
 pillow
 matplotlib
 scipy
+tornado
+termcolor

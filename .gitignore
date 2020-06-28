@@ -1,7 +1,9 @@
 #Log files
 *.log
-debugging
+#debugging
 backup
+
+certificates
 
 #videos
 *.mp4

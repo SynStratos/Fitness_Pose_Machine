@@ -59,13 +59,13 @@ def _check_hands(angle, **kwargs):
 
     # TODO: check if 20 is okay as threshold
     # check person is standing + hands are close + at least one hand is over the respective shoulder (this manages joints missing for one of the sides)
-    return (90 <= angle <= 105) and (distance <= 20) and (hand_shoulder_dx or hand_shoulder_sx)
+    return (90 <= angle <= 105) and (distance <= 24) and (hand_shoulder_dx or hand_shoulder_sx)
 
 
 def test_check_floor(angle, **kwargs):
 
     return (150 <= angle <= 180) and \
-          ((_shoulder_hand_distance_dx(kwargs['joints']) <= 18 and kwargs['side'] == "s_e") or (_shoulder_hand_distance_sx(kwargs['joints']) <= 18 and kwargs['side'] == "s_w")) # arriva anche a ~15 - 10
+          ((_shoulder_hand_distance_dx(kwargs['joints']) <= 18 and kwargs['side'] == "s_e") or (_shoulder_hand_distance_sx(kwargs['joints']) <= 16 and kwargs['side'] == "s_w")) # arriva anche a ~15 - 10
 
 
 class Burpee(Exercise):

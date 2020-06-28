@@ -11,7 +11,7 @@
   "mids": [110, 120, 115, 105],
   "medians": [110, 120, 115, 105],
   "angles_order": [[2,3], [0,1]],
-  "repetition_timeout": 4,
+  "repetition_timeout": 10,
   "total_timeout": 20,
   "n_repetition": 10,
   "tolerance": [12, 12, 20, 16],
