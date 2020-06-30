@@ -2,7 +2,9 @@
 *.log
 #debugging
 backup
+try.py
 
+#certificates
 certificates
 
 #videos

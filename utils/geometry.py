@@ -48,30 +48,39 @@ def create_angle(p1, p2, p3, decimal=2):
     """
     flag = 'axis' in p3
 
+    # x2, y2 = p2
+    #
+    # if "axis_y" in p3:
+    #     p3 = x2, 0
+    # elif "axis_x" in p3:
+    #     p3 = 0, y2
+
+    x1, y1 = p1
     x2, y2 = p2
 
     if "axis_y" in p3:
-        p3 = x2, 0
+        p3 = x2, y1
     elif "axis_x" in p3:
-        p3 = 0, y2
+        p3 = x1, y2
+
 
     try:
         p12 = point_distance(p1, p2)
-        p13 = point_distance(p1, p3) #np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
-        p23 = point_distance(p3, p2) #np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
+        p13 = point_distance(p1, p3)  # np.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
+        p23 = point_distance(p3, p2)  # np.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
 
         a = np.arccos((p12 ** 2 + p23 ** 2 - p13 ** 2) / (2 * p12 * p23))
 
         if np.isnan(a):
-            a = 0
-
-        a_deg = math.degrees(a)  # *180/math.pi
+            a_deg = None
+        else:
+            a_deg = math.degrees(a)  # *180/math.pi
 
     except:
-        log.debug("Exception for angle")
-        a_deg = 0
-    finally:
-        if flag:
-            a_deg = np.abs(90 - a_deg) + 90
+        log.debug("Exception for angle occurred.")
+        a_deg = None
+    # finally:
+    #     if flag:
+    #         a_deg = np.abs(90 - a_deg) + 90
 
     return round(a_deg, decimal)

@@ -17,7 +17,7 @@ def _shoulder_hand_distance_sx(joints):
     try:
         hand_sx = joints[7]
         shoudler_sx = joints[5]
-        print("sx:", str(hand_sx[1] - shoudler_sx[1]))
+        log.debug("left hand-should distance: ", str(hand_sx[1] - shoudler_sx[1]))
         return hand_sx[1] - shoudler_sx[1]
     except:
         return 99999
@@ -32,7 +32,7 @@ def _shoulder_hand_distance_dx(joints):
     try:
         hand_dx = joints[4]
         shoudler_dx = joints[2]
-        print("dx:", str(hand_dx[1] - shoudler_dx[1]))
+        log.debug("right hand-should distance: ", str(hand_dx[1] - shoudler_dx[1]))
         return hand_dx[1] - shoudler_dx[1]
     except:
         return 99999
@@ -54,18 +54,25 @@ def _check_hands(angle, **kwargs):
 
     try:
         distance = point_distance(joints[7], joints[4])
+        log.debug("distance between hands: ", str(distance))
     except:
         distance = 99999
 
     # TODO: check if 20 is okay as threshold
     # check person is standing + hands are close + at least one hand is over the respective shoulder (this manages joints missing for one of the sides)
-    return (90 <= angle <= 105) and (distance <= 24) and (hand_shoulder_dx or hand_shoulder_sx)
+    return (79 <= angle <= 90) and (distance <= 24) and (hand_shoulder_dx or hand_shoulder_sx)
 
 
 def test_check_floor(angle, **kwargs):
-
-    return (150 <= angle <= 180) and \
-          ((_shoulder_hand_distance_dx(kwargs['joints']) <= 18 and kwargs['side'] == "s_e") or (_shoulder_hand_distance_sx(kwargs['joints']) <= 16 and kwargs['side'] == "s_w")) # arriva anche a ~15 - 10
+    threshold_chest_on_the_ground = 20
+    return (0 <= angle <= 50) and \
+           ((_shoulder_hand_distance_dx(kwargs['joints']) <= threshold_chest_on_the_ground and kwargs['side'] == "s_e")
+            or
+            (_shoulder_hand_distance_sx(kwargs['joints']) <= threshold_chest_on_the_ground and kwargs['side'] == "s_w"))
+    # arriva anche a ~15 - 10
+    # ((_shoulder_hand_distance_dx(kwargs['joints']) <= threshold_chest_on_the_ground )
+    #  or
+    #  (_shoulder_hand_distance_sx(kwargs['joints']) <= threshold_chest_on_the_ground ))
 
 
 class Burpee(Exercise):
@@ -78,11 +85,3 @@ class Burpee(Exercise):
             _check_hands,
             test_check_floor
         ]
-
-    def process_frame(self, frame, exercise_over=False, **kwargs):
-
-        # TODO: farlo direttamente al livello del calcolo degli angoli? -> così più facile ma boh
-        if frame is not None:
-        # add angle needed only for burpee
-            frame[-1] = np.abs(90 - frame[-1]) + 90
-        super().process_frame(frame, exercise_over=exercise_over, **kwargs)

@@ -5,15 +5,15 @@
     "s_e": [-1, -1, -1],
     "s_w": [-1, -1, -1]
   },
-  "push_pull": ["push", "push", "push"],
-  "mins": [100, null, null],
-  "maxs": [180, null, null],
-  "mids": [140, 140, 140],
-  "medians": [140, null, null],
+  "push_pull": ["pull", "push", "push"],
+  "mins": [65, null, null],
+  "maxs": [20, null, null],
+  "mids": [55, 50, 50],
+  "medians": [50, null, null],
   "angles_order": null,
   "repetition_timeout": 10,
   "total_timeout": 20,
-  "n_repetition": 10,
-  "tolerance": [20, null, null],
+  "n_repetition": 4,
+  "tolerance": [25, null, null],
   "number_of_spikes": [1, 0, 0]
 }

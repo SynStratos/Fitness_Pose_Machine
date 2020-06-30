@@ -13,6 +13,7 @@ from utils.angles import preprocess_angles
 from utils.image import *
 
 from exercises.thruster import Thruster
+
 from exercises.burpee import Burpee
 
 # CSV DEBUGGING
@@ -79,7 +80,7 @@ def ingest_image_local(image):
         except TimeoutError:
             print(colored("Timeout", 'red'))
         finally:
-            frames = copy(list(preprocessed_x[-2:]))
+            frames = copy(frames[-2:])
             joints_total = copy(joints_total[-2:])
 
 
@@ -134,13 +135,14 @@ if __name__ == '__main__':
     set_logger()
     global_config = os.path.join(os.getcwd(), "config/global_config.json")
 
-    # useful for debugging
-    file_debug = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
-
     # load videos
-    # video_file = os.path.join(os.getcwd(), "test_videos/burpee_2.mp4")
-    # video_file = os.path.join(os.getcwd(), "test_videos/burpee_1.mp4")
-    video_file = os.path.join(os.getcwd(), "test_videos/thruster_1.mp4")
+    # file_name_debug = "burpee_2.mp4"
+    # file_name_debug = "burpee_1.mp4"
+    file_name_debug = "test.mp4"
+    video_file = os.path.join(os.getcwd(), "test_videos/" + file_name_debug)
+
+    # useful for debugging
+    file_debug = file_debug_dir + file_name_debug.replace('.','') + "_" +str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
 
     # instance model
     instantiate_model()

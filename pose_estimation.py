@@ -27,14 +27,17 @@ colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0]
           [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
           [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
-with open('./config/global_config.json') as f:
+# cap values == maximum value reachable for each angle
+cap_values = [180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 90]
+
+with open('backup/global_config.json') as f:
     g_config = json.load(f)
 
 model_weights = os.path.join('./weights', g_config['model'])
 
 model = None
 
-with open('./config/pose_estimation_config.json') as f:
+with open('backup/pose_estimation_config.json') as f:
     pose_config = json.load(f)
 
 boxsize = pose_config['boxsize']
@@ -93,7 +96,7 @@ def _get_angles(joints):
 
             a_deg = create_angle(v1, v2, v3)
         except:
-            a_deg = 0
+            a_deg = None
 
         ang.append(a_deg)
 
@@ -318,7 +321,7 @@ def process_image(image, accept_missing=True, no_features=False, features_method
     except:
         if accept_missing:
             log.warning("No person found in this frame: setting all joints to None.")
-            person = [None]*19
+            person = [(None, None)] * 19
         else:
             # may be useful for initial settings to check the joints of the person are visible
             raise NotFoundPersonException("Unable to find a person joints in the frame.")
