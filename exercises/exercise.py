@@ -147,8 +147,6 @@ class Exercise:
         elif self.states[index] == 1:
             if angle < _min:
                 self.states[index] = 0
-            elif angle >= mid_point:
-                self.states[index] = 2
             elif (_max - self.tolerance[index]) <= angle <= (_max + self.tolerance[index]):
                 # goes directly to top value, maybe skipped frames
                 self.number_of_spikes[index] -= 1
@@ -161,6 +159,8 @@ class Exercise:
                     # expected number of times exceeded -> rep is bad
                     self.outputs[index] = 2
                 self.states[index] = 3
+            elif angle >= mid_point:
+                self.states[index] = 2
 
         # state 'rep_going'
         elif self.states[index] == 2:
@@ -335,13 +335,18 @@ class Exercise:
                     self.__reset__()
                     self.num_good_reps += 1
 
-                    if self.num_good_reps == self.n_repetition:
+                    if self.num_good_reps + self.num_bad_reps == self.n_repetition:
                         log.info("Completed exercise.")
-                        raise CompleteExerciseException
+                        raise CompleteExerciseException("last_good")
 
                     raise GoodRepetitionException
                 else:
                     log.info("Bad repetition!")
-                    self.num_bad_reps += 1
                     self.__reset__()
+                    self.num_bad_reps += 1
+
+                    if self.num_good_reps + self.num_bad_reps == self.n_repetition:
+                        log.info("Completed exercise.")
+                        raise CompleteExerciseException(message)
+
                     raise BadRepetitionException(message)

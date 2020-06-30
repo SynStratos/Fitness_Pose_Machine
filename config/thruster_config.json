@@ -6,14 +6,14 @@
     "s_w": [1,3,9]
   },
   "push_pull": ["push", "push", "pull"],
-  "mins": [60, 83, 146],
+  "mins": [70, 83, 146],
   "maxs": [168, 169, 45],
   "mids": [110, 120, 105],
   "medians": [110, 120, 105],
   "angles_order": [[2], [0,1]],
   "repetition_timeout": 10,
   "total_timeout": 20,
-  "n_repetition": 10,
-  "tolerance": [12, 20, 25],
+  "n_repetition": 4,
+  "tolerance": [13, 20, 25],
   "number_of_spikes": [1, 1, 1]
 }

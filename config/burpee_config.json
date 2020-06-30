@@ -13,7 +13,7 @@
   "angles_order": null,
   "repetition_timeout": 10,
   "total_timeout": 20,
-  "n_repetition": 10,
-  "tolerance": [20, null, null],
+  "n_repetition": 4,
+  "tolerance": [25, null, null],
   "number_of_spikes": [1, 0, 0]
 }

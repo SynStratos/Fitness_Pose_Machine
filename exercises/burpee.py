@@ -65,7 +65,7 @@ def _check_hands(angle, **kwargs):
 
 def test_check_floor(angle, **kwargs):
     threshold_chest_on_the_ground = 20
-    return (0 <= angle <= 30) and \
+    return (0 <= angle <= 50) and \
            ((_shoulder_hand_distance_dx(kwargs['joints']) <= threshold_chest_on_the_ground and kwargs['side'] == "s_e")
             or
             (_shoulder_hand_distance_sx(kwargs['joints']) <= threshold_chest_on_the_ground and kwargs['side'] == "s_w"))
