@@ -18,8 +18,8 @@ tolerances = ex_config['tolerance']
 angles_names = ex_config['angles_names']
 
 
-nome_file = "debugging/27_06_2020_17_33_55"
-
+nome_file = "debugging/30_06_2020_00_08_04.csv"
+nome_file = nome_file.split(".csv")[0]
 data = pd.read_csv(nome_file + ".csv")
 data = data.iloc[:, :-1].values
 
@@ -36,7 +36,14 @@ data_rep = data_rep.iloc[:, :-1].values
 
 
 for graph in range(1):
-    plt.plot(np.abs(90-data[:, graph])+90, label=angles_names[graph], color='skyblue')
+    #plt.plot(np.abs(np.abs(90-data[:, graph])-90), label=angles_names[graph], color='skyblue')
+    #data_x = [d -90 if d > 90 else d for d in data[:, graph] ]
+    #if data[:, graph] > 90:
+    #    plt.plot(data[:, graph]-90, label=angles_names[graph], color='skyblue')
+    #else:
+    #    plt.plot(data[:, graph], label=angles_names[graph], color='skyblue')
+    #plt.plot(data_x, label=angles_names[graph], color='skyblue')
+    plt.plot(data[:, graph], label=angles_names[graph], color='black')
     plt.axhline(mins[graph], color='red')
     plt.fill_between(x=range(data.shape[0]), y1=maxs[graph] + tolerances[graph], y2=maxs[graph] - tolerances[graph])
     plt.axhline(mids[graph], color='orange')
@@ -49,6 +56,6 @@ for graph in range(1):
         elif el[1] == "timeout":
             color = "yellow"
 
-        plt.axvline(x=el[0] - 3, color=color)
+        plt.axvline(x=el[0] - 4, color=color)
 
     plt.show()

@@ -21,7 +21,7 @@ import datetime
 # import custom
 from logger import set_logger, log
 from exceptions import *
-from pose_estimation import process_image, instantiate_model
+from pose_estimation import process_image, instantiate_model, cap_values
 from utils.angles import preprocess_angles
 from utils.pose import get_orientation
 
@@ -89,7 +89,6 @@ def ingest_image(image, exercise_over=False):
     if not exercise_over:
         # frame to process
         new_frame = image
-
         # process frame
         joints_person, processed_frame = process_image(new_frame, show_joints=False)
         joints_total.append(joints_person)
@@ -97,7 +96,7 @@ def ingest_image(image, exercise_over=False):
 
         # execution on angles only if frames >=3 (outliers & interpolation)
         if len(frames) >= 3:
-            preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians)
+            preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians, cap_values=cap_values)
             joints = joints_total[-2]
 
             # debugging: TODO remove in production -> flag_debug_csv = False

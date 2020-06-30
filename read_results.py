@@ -16,7 +16,9 @@ mids = ex_config['mids']
 tolerances = ex_config['tolerance']
 angles_names = ex_config['angles_names']
 
-nome_file = "debugging/27_06_2020_20_09_39"
+nome_file = "debugging/29_06_2020_22_24_29.csv"
+
+nome_file = nome_file[:-4]
 
 data = pd.read_csv(nome_file + ".csv")
 data = data.iloc[:, :-1].values
@@ -25,10 +27,10 @@ data_rep = pd.read_csv(nome_file + "_reps.csv", header=None)
 data_rep = data_rep.iloc[:, :-1].values
 
 # grafico comune
-plt.plot(data[:, 0], label=angles_names[0], color='skyblue')
-plt.plot(data[:, 1], label=angles_names[1], color='orange')
-plt.plot(data[:, 2], label=angles_names[2], color='green')
-plt.plot(data[:, 3], label=angles_names[3], color='red')
+plt.plot(data[:, 0], label=angles_names[0], color='skyblue') # elbow
+plt.plot(data[:, 1], label=angles_names[1], color='orange') #shoulder
+#plt.plot(data[:, 2], label=angles_names[2], color='green') #hip
+plt.plot(data[:, 2], label=angles_names[2], color='red') #knee
 
 for el in data_rep:
     #print(el)
