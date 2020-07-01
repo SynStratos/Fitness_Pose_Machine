@@ -205,6 +205,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         global exercise_name, frames
         global flag_check_initial_position
         global flag_check_process_exercise
+        global file_debug, file_debug_rep
 
         # read message arrived -> always in json format
         message_ = json.loads(message)
@@ -220,6 +221,16 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             # exercise = EXERCISE[message_['exercise']](config=None, side='s_e', fps=global_config['fps'])
             exercise_name = message_['exercise']
 
+        elif message_['type'] == "start_webcam_session":
+            print(colored('> New webcam session started. Erasing global vars.', 'red'))
+            log.debug("Starting webcam session, cleaning ")
+            # webcam session had started -> initialize every global vars
+            # resetting global variables
+            self.__clean_global_vars__()
+            # file debug save useful for save csv
+            file_debug = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
+            file_debug_rep = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + "_reps.csv"
+
         elif message_['type'] == "detection_initial_position":
             # detect initial position
             print(colored('> Message to detect initial position', 'red'))
@@ -228,8 +239,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         elif message_['type'] == "detection_webcam_exercise":
             # manage the beginning of a webcam exercise
             print(colored('> Message to process exercise from webcam', 'red'))
-            if not flag_break:
-                self.__ingest_webcam_stream__(message_['data'])
+            log.debug("Processing frame received from webcam input.")
+            self.__ingest_webcam_stream__(message_['data'])
 
         elif message_['type'] == "stop_initial_position":
             print(colored('> Message to stop detecting initial position from webcam', 'red'))
@@ -241,13 +252,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             print(colored('> Message to stop exercise processing from webcam', 'red'))
             # user sent a message to stop the process of the exercise
             # process last frames
+            log.debug("Received stop signal from client, processing last frame.")
             self.__ingest_webcam_stream__(message_['data'], last_one=True)
             # update client that server received this message
-            [client.write_message(
-                {'type': 'stop_webcam_process_exercise_executed', 'reps_total': reps_total, 'reps_ok': reps_ok,
-                 'reps_wrong': reps_wrong}) for client in
-                self.connections]
-            # stop processing on-fly message from FE -> flag_check_process_exercise = False
+            if flag_check_process_exercise:
+                [client.write_message(
+                    {'type': 'stop_webcam_process_exercise_executed', 'reps_total': reps_total, 'reps_ok': reps_ok,
+                     'reps_wrong': reps_wrong}) for client in
+                    self.connections]
+                # stop processing on-fly message from FE -> flag_check_process_exercise = False
             flag_check_process_exercise = False
 
         elif message_['type'] == "flag_check_initial_position":
@@ -260,12 +273,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
     def __clean_global_vars__(self):
         global orientation
         global exercise, frames, joints_total
-        global flag_check_initial_position
+        global flag_check_initial_position, flag_check_process_exercise
         global flag_break
         global reps_ok, reps_wrong, reps_total, number_frames
+        global file_debug, file_debug_rep
         print(colored("> Erasing global variables", 'red'))
         [client.write_message({'type': 'console', 'text': "Erasing global variables on server"}) for client in
          self.connections]
+        flag_check_initial_position = True
+        flag_check_process_exercise = True
         orientation = None
         frames = []
         flag_break = False
@@ -292,8 +308,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         frame = cv2.cvtColor(np.array(Image.open(BytesIO(base64.b64decode(image_data_url.split(",")[1])))), cv2.COLOR_RGB2BGR)
 
         if flag_check_initial_position:
-            # resetting global variables
-            self.__clean_global_vars__()
             # process image with pose estimation
             try:
                 joints, _ = process_image(frame, accept_missing=False, no_features=True)
@@ -344,7 +358,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
 
         _ = self.__try_catch_images__(frame, webcam=True, last_one=last_one)
         number_frames += 1
-        log.debug("Frame #", number_frames)
 
     def __try_catch_images__(self, image, webcam=False, last_one=False):
         """
@@ -360,6 +373,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         global flag_break
 
         if flag_check_process_exercise:
+            debug_string = "Frame #" + str(number_frames)
+            log.debug(debug_string)
             # frame to process
 
             #flag used when this function is called by ingest_video()
@@ -419,10 +434,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
                      self.connections]
                 # exercise completed according to fixed reps
                 if webcam:
+                    flag_check_process_exercise = False
                     print(colored("> Exercise ended. Fixed number of repetitions reached", 'green'))
+                    # [client.write_message(
+                    #     {'type': 'video_processing_terminated', 'reps_total': reps_total, 'reps_ok': reps_ok,
+                    #      'reps_wrong': reps_wrong}) for client in self.connections]
                     [client.write_message(
-                        {'type': 'video_processing_terminated', 'reps_total': reps_total, 'reps_ok': reps_ok,
-                         'reps_wrong': reps_wrong}) for client in self.connections]
+                        {'type': 'stop_webcam_process_exercise_executed', 'reps_total': reps_total, 'reps_ok': reps_ok,
+                         'reps_wrong': reps_wrong}) for client in
+                        self.connections]
                     [client.write_message({'type': 'console',
                                            'text': "Reps Total: " + str(reps_total) + "; Reps OK: " + str(
                                                reps_ok) + "; Reps WRONG: " + str(reps_wrong) + ";"}) for client in
@@ -479,7 +499,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
                     [client.write_message({'type': 'console', 'text': 'Exercise Timeout'}) for client in self.connections]
                     # TODO: from client side, if webcam excercise, stream must be interrupted
                     flag_break = True
-
+            except Exception:
+                flag_check_process_exercise = False
+                flag_break = True
+                print(colored("> Unexpected error.", 'red'))
+                [client.write_message({'type': 'error',
+                                       'text': "Unexpected error occured during webcam frame parsing."})
+                 for client in self.connections]
             return flag_break
 
         else:
@@ -569,6 +595,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         success, image = capture.read()
         # process first frame to check initial position
         try:
+            # get images resized
+            image = cv2.resize(image, (w_video, h_video))
             joints, _ = process_image(image, accept_missing=False, no_features=True)
             orientation = get_orientation(joints[13], joints[10])
             print(colored("> Person detected correctly: " + str(orientation), 'green'))
