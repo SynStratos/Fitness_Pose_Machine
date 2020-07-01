@@ -1,6 +1,7 @@
 {
-  "video_processing_dir": "video_processing",
   "fps": 7,
   "height": 240,
-  "width": 240
+  "width": 240,
+  "video_processing_dir": "video_processing",
+  "initial_detection_timeout": 10
 }

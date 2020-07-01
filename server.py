@@ -4,6 +4,7 @@ import os
 from matplotlib.cm import get_cmap
 
 try:
+    # needed on windows
     os.system("for /f \"tokens=5\" %a in ('netstat -aon ^| find \"5000\" ^| find \"LISTENING\"') do taskkill /f /pid %a")
 except:
     pass
@@ -31,7 +32,7 @@ import datetime
 # import custom
 from logger import set_logger, log
 from exceptions import *
-from pose_estimation import process_image, instantiate_model, cap_values
+from pose_estimation import process_image, instantiate_model, cap_values, colors
 from utils.angles import preprocess_angles
 from utils.pose import get_orientation
 
@@ -90,11 +91,7 @@ reps_wrong = 0
 ## last repetition exit
 flag_break = False
 
-##
 
-colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
-          [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
-          [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 ####################################################################
 
 def ingest_image(image, exercise_over=False):
@@ -127,11 +124,6 @@ def ingest_image(image, exercise_over=False):
         if len(frames) >= 3:
             preprocessed_x = preprocess_angles(np.array(frames[-3:]), indexes=exercise.angles_index, mids=exercise.medians, cap_values=cap_values)
             joints = joints_total[-2]
-            # print(joints_person)
-            # print("--------------")
-            # print(frames)
-            # print("--------------")
-            # print(preprocessed_x)
             # debugging: TODO remove in production -> flag_debug_csv = False
             # file_debug defined in -> ingest_video()
             if flag_debug_csv:
@@ -144,6 +136,7 @@ def ingest_image(image, exercise_over=False):
                 # exceptions will be catched from super method calling this function
                 exercise.process_frame(preprocessed_x[-2], exercise_over,joints=joints)
             finally:
+                # remove unnecessary elements from angles and joints data structures
                 frames = copy(list(preprocessed_x[-2:]))
                 joints_total = copy(joints_total[-2:])
 
@@ -236,7 +229,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             # manage the beginning of a webcam exercise
             print(colored('> Message to process exercise from webcam', 'red'))
             if not flag_break:
-                self.ingest_webcam_stream(message_['data'])
+                self.__ingest_webcam_stream__(message_['data'])
 
         elif message_['type'] == "stop_initial_position":
             print(colored('> Message to stop detecting initial position from webcam', 'red'))
@@ -248,7 +241,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             print(colored('> Message to stop exercise processing from webcam', 'red'))
             # user sent a message to stop the process of the exercise
             # process last frames
-            self.ingest_webcam_stream(message_['data'], last_one=True)
+            self.__ingest_webcam_stream__(message_['data'], last_one=True)
             # update client that server received this message
             [client.write_message(
                 {'type': 'stop_webcam_process_exercise_executed', 'reps_total': reps_total, 'reps_ok': reps_ok,
@@ -264,26 +257,43 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
 
     # -------------------------------------------------------------------------------------------------------- #
 
-    def __detect_initial_position__(self, image_data_url):
-        """
-        method that ingests a single frame to detect the initial position
-        @param image_data_url:
-        @return:
-        """
+    def __clean_global_vars__(self):
         global orientation
         global exercise, frames, joints_total
         global flag_check_initial_position
         global flag_break
         global reps_ok, reps_wrong, reps_total, number_frames
+        print(colored("> Erasing global variables", 'red'))
+        [client.write_message({'type': 'console', 'text': "Erasing global variables on server"}) for client in
+         self.connections]
+        orientation = None
+        frames = []
+        flag_break = False
+        joints_total = []
+        number_frames = 1
+        reps_ok = 0
+        reps_wrong = 0
+        reps_total = 0
+
+    def __detect_initial_position__(self, image_data_url):
+        """
+        method that ingests a single frame from WEBCAM to detect the initial position
+        manages exceptions related to missing joints of the body and feet position
+        @param image_data_url: data url of the image to be decoded
+        @return:
+        """
+        global orientation
+        global exercise
+        global flag_check_initial_position
+
         # TODO: ci penso se inserire il timeout dopo X tentativi
         #frame = frame in base64
         #decode base64 -> image
         frame = cv2.cvtColor(np.array(Image.open(BytesIO(base64.b64decode(image_data_url.split(",")[1])))), cv2.COLOR_RGB2BGR)
 
-        print("Dimensione immagine")
-        print(frame.shape)
-
         if flag_check_initial_position:
+            # resetting global variables
+            self.__clean_global_vars__()
             # process image with pose estimation
             try:
                 joints, _ = process_image(frame, accept_missing=False, no_features=True)
@@ -300,13 +310,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
 
                 # initialize exercise object once the position has been detected
                 exercise = EXERCISE[exercise_name](config=None, side=orientation, fps=fps)
-                frames = []
-                flag_break = False
-                joints_total = []
-                number_frames = 1
-                reps_ok = 0
-                reps_wrong = 0
-                reps_total = 0
 
             except FeetException:
                 print(colored("> Can't detect one or both foot.", 'red'))
@@ -323,7 +326,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         else:
             print(colored("> Skipping frame to detect initial position.", 'green'))
 
-    def ingest_webcam_stream(self, image_data_url, last_one=False):
+    def __ingest_webcam_stream__(self, image_data_url, last_one=False):
         """
 
         @param last_one:
@@ -341,7 +344,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
 
         _ = self.__try_catch_images__(frame, webcam=True, last_one=last_one)
         number_frames += 1
-        print(number_frames)
+        log.debug("Frame #", number_frames)
 
     def __try_catch_images__(self, image, webcam=False, last_one=False):
         """
@@ -388,6 +391,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
                 if "last_good" in str(ex):
                     reps_total += 1
                     reps_ok += 1
+                    print(colored("> Reps OK", 'green'))
                     # message for offline video processing
                     [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition OK!'}) for
                      client in
@@ -415,7 +419,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
                      self.connections]
                 # exercise completed according to fixed reps
                 if webcam:
-                    print(colored("> Exercise ended. Fixed reps", 'green'))
+                    print(colored("> Exercise ended. Fixed number of repetitions reached", 'green'))
                     [client.write_message(
                         {'type': 'video_processing_terminated', 'reps_total': reps_total, 'reps_ok': reps_ok,
                          'reps_wrong': reps_wrong}) for client in self.connections]
@@ -431,10 +435,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
             except NoneRepetitionException:
                 if not last_one:
                     # exercise timeout without repetitions
-                    print(colored("> Repetition time exceed", 'green'))
-
+                    print(colored("> Too tight or none movement detected, try moving better", 'green'))
                     # message offline + online
-                    [client.write_message({'type': 'console', 'text': 'Repetition time exceed'}) for client in self.connections]
+                    [client.write_message({'type': 'console', 'text': 'Too tight or none movement detected, try moving better'}) for client in self.connections]
             except BadRepetitionException as bre:
                 # found wrong repetition + message
                 reps_total += 1
@@ -445,7 +448,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
                         file.write(str(number_frames) + ",ko,")
                         file.write("\n")
                 print(colored("> Reps BAD: " + message, 'green'))
-
                 # message for offline video processing
                 [client.write_message({'type': 'video_processing_updates_text', 'update': 'Repetition WRONG!: ' + message})
                  for client in self.connections]
@@ -497,35 +499,34 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler, ABC):
         global joints_total
         global number_frames
 
-        global reps_ok
-        global reps_wrong
-        global reps_total
+        # reps counters and delimiter
+        global reps_ok, reps_wrong, reps_total
         global flag_break
 
         # useful for debugging
-        global file_debug_dir
-        global file_debug
-        global file_debug_rep
+        global file_debug_dir, file_debug, file_debug_rep
 
-        # TODO: valid only in case 1 client connected -> NO multi clients
         # prepare system for new ingest video -> erasing global vars -> not at the end of "ingest_video()" because if the clients disconnects, global vars never erased
-        print(colored("> Erasing global variables", 'red'))
-        [client.write_message({'type': 'console', 'text': "Erasing global variables on server"}) for client in
-         self.connections]
-        orientation = None
-        frames = []
-        joints_total = []
-        number_frames = 1
-        reps_ok = 0
-        reps_wrong = 0
-        reps_total = 0
+        # resetting global variables
+        self.__clean_global_vars__()
+        # print(colored("> Erasing global variables", 'red'))
+        # [client.write_message({'type': 'console', 'text': "Erasing global variables on server"}) for client in
+        #  self.connections]
+        # #
+        # orientation = None
+        # frames = []
+        # joints_total = []
+        # number_frames = 1
+        # #
+        # reps_ok = 0
+        # reps_wrong = 0
+        # reps_total = 0
+        # # flag break
+        # flag_break = False
 
         # file debug save useful for save csv
         file_debug = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + ".csv"
         file_debug_rep = file_debug_dir + str(datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")) + "_reps.csv"
-
-        # flag break
-        flag_break = False
 
         # saving file
         # update client

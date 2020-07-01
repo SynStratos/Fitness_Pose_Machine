@@ -1,6 +1,5 @@
 {
   "model": "keras_model.h5",
   "fps": 7,
-  "height": 240,
-  "initial_detection_timeout": 10
+  "height": 240
 }
